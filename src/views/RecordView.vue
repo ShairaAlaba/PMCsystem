@@ -530,4 +530,30 @@ tr.locked > td { background: #fafafa; }
 .fade-saved-leave-to { opacity: 0; transform: translateX(8px); }
 .x-mark { color: #dc2626; font-weight: 700; font-size: 12px; }
 .leg-x { width: 20px; height: 20px; background: #fff0f0; border: 1px solid #fca5a5; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #dc2626; font-weight: 700; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE — RecordView
+   ══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .top-bar { padding: 10px 14px; gap: 10px; }
+  .top-title { font-size: 13px; }
+  .top-month { display: none; }
+  .btn { font-size: 13px; padding: 9px 14px; }
+
+  .print-area { margin: 10px; padding: 14px; }
+
+  /* Table scrolls horizontally — this is correct for 25 columns */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .legend { flex-wrap: wrap; gap: 8px; padding: 10px 14px; margin: 0 10px 14px; font-size: 12px; }
+
+  .rec-info { gap: 12px; flex-wrap: wrap; }
+  .ri-value { min-width: 100px; }
+}
+
+@media (max-width: 420px) {
+  .top-bar { padding: 8px 10px; }
+  .print-area { margin: 8px; padding: 10px; }
+  .top-title { font-size: 12px; }
+}
 </style>

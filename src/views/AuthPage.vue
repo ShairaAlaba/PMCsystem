@@ -388,5 +388,16 @@ async function doRegister() {
   font-weight: 700;
 }
 
-/* Responsive disabled — fixed layout for testing */
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .auth-page { grid-template-columns: 1fr; min-height: 100svh; }
+  .auth-left { display: none; }
+  .auth-right { padding: 24px 20px; align-items: flex-start; padding-top: 40px; }
+  .auth-form-wrap { max-width: 100%; }
+  .form-heading { font-size: 24px; }
+  .role-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+@media (max-width: 400px) {
+  .role-cards { grid-template-columns: 1fr; }
+}
 </style>

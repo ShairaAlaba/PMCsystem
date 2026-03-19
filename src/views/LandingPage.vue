@@ -516,12 +516,27 @@ const features = [
 .footer-brand { color: rgba(255,255,255,0.8); }
 .footer-links { display: flex; gap: 24px; }
 
-@media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; padding: 100px 24px 60px; }
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: 1fr; padding: 90px 32px 60px; }
   .hero-visual { display: none; }
-  .navbar { padding: 14px 24px; }
-  .features { padding: 60px 24px; }
-  .cta-section { padding: 60px 24px; }
-  .footer-inner { flex-direction: column; gap: 12px; text-align: center; }
+}
+@media (max-width: 768px) {
+  .navbar { padding: 12px 20px; }
+  .nav-sub { display: none; }
+  .hero { padding: 80px 20px 48px; }
+  .hero-title { font-size: clamp(36px, 10vw, 56px); }
+  .hero-desc { font-size: 15px; }
+  .hero-actions { flex-direction: column; gap: 10px; }
+  .btn-lg { padding: 14px 28px; font-size: 15px; width: 100%; justify-content: center; }
+  .hero-stats { gap: 16px; }
+  .stat-value { font-size: 20px; }
+  .features { padding: 48px 20px; }
+  .features-grid { grid-template-columns: 1fr; gap: 16px; }
+  .section-title { font-size: clamp(24px, 7vw, 38px); margin-bottom: 36px; }
+  .cta-section { padding: 48px 20px; }
+  .cta-content h2 { font-size: clamp(28px, 8vw, 44px); }
+  .footer { padding: 20px 20px; }
+  .footer-inner { flex-direction: column; gap: 10px; text-align: center; }
+  .footer-links { flex-direction: column; gap: 4px; }
 }
 </style>
