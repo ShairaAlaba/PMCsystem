@@ -93,12 +93,6 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('pmc_user')
     },
 
-    // ✅ FIX: Re-reads all auth data from localStorage (used by admin dashboard)
-    refresh() {
-      this.accounts = JSON.parse(localStorage.getItem('pmc_accounts') || '[]')
-      this.onlineLogs = JSON.parse(localStorage.getItem('pmc_online_logs') || '[]')
-    },
-
     getInspectors() {
       return this.accounts.filter(a => a.role === 'inspector')
     },
