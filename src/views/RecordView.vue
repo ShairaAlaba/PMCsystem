@@ -44,7 +44,6 @@
       <img src="../assets/2.png" alt="Bagong Pilipinas Logos" class="header-img">
     </div>
   </div>
-<br>
       <!-- Record Info -->
       <div class="rec-info">
         <div class="ri-field">
@@ -141,6 +140,10 @@
           </tbody>
         </table>
       </div>
+      <!-- Print Footer -->
+      <div class="print-footer">
+        <span class="print-footer-label">F-GEN-PMC-003b Rev. 3, {{ printDate }}</span>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -190,9 +193,19 @@ const todayYear = now.getFullYear()
 
 const record = computed(() => pmc.getRecord(route.params.id))
 
+// Auto-generated date label: dd/mm/yy
+const printDate = computed(() => {
+  const d = now
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yy = String(d.getFullYear()).slice(-2)
+  return `${dd}/${mm}/${yy}`
+})
+
 // Track unsaved edits & save feedback
 const hasEdits = ref(false)
 const savedMsg = ref(false)
+const hasSaved = ref(false) // becomes true only after inspector hits Save
 let savedTimer = null
 
 // Back: always go to the correct dashboard
@@ -204,6 +217,7 @@ function goBack() {
 function flashSaved() {
   savedMsg.value = true
   hasEdits.value = false
+  hasSaved.value = true
   clearTimeout(savedTimer)
   savedTimer = setTimeout(() => { savedMsg.value = false }, 2500)
 }
@@ -215,9 +229,6 @@ function saveAll() {
 }
 
 function shouldShowX(day) {
-  // Show ✗ on every unchecked cell for any day that has already occurred
-  // (past months, past days, AND today — regardless of save state).
-  // Only future days stay blank.
   if (!record.value) return false
   const recYear = record.value.year
   const recMonth = record.value.month
@@ -225,8 +236,17 @@ function shouldShowX(day) {
   if (recYear < todayYear) return true
   // Record is in a past month of the current year
   if (recYear === todayYear && recMonth < todayMonth) return true
-  // Record is in the current month — show ✗ for today AND all past days
-  if (recYear === todayYear && recMonth === todayMonth) return day <= todayDate
+  // Record is in the current month:
+  if (recYear === todayYear && recMonth === todayMonth) {
+    // Past days always show ✗
+    if (day < todayDate) return true
+    if (day === todayDate) {
+      // Admin always sees ✗ on unchecked cells (records are already saved)
+      if (auth.isAdmin) return true
+      // Inspector: ✗ only appears after they click Save this session
+      return hasSaved.value
+    }
+  }
   // Future month — no ✗
   return false
 }
@@ -294,8 +314,9 @@ function printRecord() {
    ===================== */
 @media print {
   @page {
-    size: A4 landscape;
-    margin: 4mm 4mm 4mm 4mm;
+    /* Long bond paper landscape: 13in × 8.5in — ONE PAGE ONLY */
+    size: 13in 8.5in;
+    margin: 4mm 5mm 4mm 5mm;
   }
 
   .no-print, .legend, .top-bar { display: none !important; }
@@ -308,6 +329,10 @@ function printRecord() {
     border-radius: 0 !important;
     overflow: visible !important;
     width: 100% !important;
+    height: 207mm !important;
+    max-height: 207mm !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
 
   /* Header: images at both edges */
@@ -318,27 +343,27 @@ function printRecord() {
     width: 100% !important;
     margin: 0 0 2px 0 !important;
     padding: 0 !important;
+    flex-shrink: 0 !important;
     box-sizing: border-box !important;
   }
   .header-left, .header-right { flex: 0 0 auto !important; }
-  .header-img { max-height: 50px !important; height: auto !important; display: block !important; object-fit: contain !important; }
+  .header-img { max-height: 62px !important; height: auto !important; display: block !important; object-fit: contain !important; }
 
   /* Record info rows */
-  .rec-info { display: flex !important; gap: 12px !important; margin-bottom: 1px !important; margin-top: 1px !important; flex-wrap: nowrap !important; }
-  .ri-label { font-size: 6.5px !important; font-weight: 700 !important; white-space: nowrap !important; }
-  .ri-value { font-size: 6.5px !important; min-width: 60px !important; }
+  .rec-info { display: flex !important; gap: 16px !important; margin-bottom: 1.5px !important; margin-top: 1.5px !important; flex-wrap: nowrap !important; flex-shrink: 0 !important; }
+  .ri-label { font-size: 10px !important; font-weight: 700 !important; color: #000 !important; white-space: nowrap !important; }
+  .ri-value { font-size: 10px !important; color: #000 !important; min-width: 70px !important; }
 
-  .table-wrap { overflow: visible !important; width: 100% !important; }
+  .table-wrap { overflow: visible !important; width: 100% !important; flex: 1 !important; }
 
   /*
-   * A4 landscape usable width = 297 - 8mm = 289mm
-   * 25 total columns: 1 DATE + 22 AM/PM + 1 REMARKS + 1 INSPECTED(signature only)
-   *
-   * DATE       =  2.2%  ( 6.4mm — fits "31")
-   * each AM/PM =  3.67% (10.6mm — fits ✓/✗ + AM/PM label) × 22 = 80.74%
-   * REMARKS    =  9.0%  (26mm — fits short text)
-   * INSPECTED  =  8.0%  (23mm — signature line only, not full name)
-   * TOTAL      = 99.94% ≈ 100%
+   * Long bond landscape usable: ~320mm wide, ~207mm tall
+   * Header logos:    ~14mm
+   * Rec info ×2:     ~6mm
+   * TH rows ×2:       ~10mm  (given proper line-height + padding)
+   * 31 rows × 4.2mm:  ~130mm
+   * Footer:          ~3mm
+   * TOTAL:           ~163mm  ✓ fits in 207mm
    */
   .pmc-table {
     width: 100% !important;
@@ -348,37 +373,42 @@ function printRecord() {
   }
 
   .pmc-table th {
-    font-size: 5px !important;
-    padding: 1px 0 !important;
-    line-height: 1.15 !important;
+    font-size: 6.5px !important;
+    padding: 3px 1px !important;
+    line-height: 1.4 !important;
+    color: #fff !important;
     background: #1a5c1a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
+    white-space: normal !important;
     vertical-align: middle !important;
+    overflow: visible !important;
   }
 
   .pmc-table td {
-    height: 5.2mm !important;
-    max-height: 5.2mm !important;
+    height: 4.2mm !important;
+    max-height: 4.2mm !important;
     padding: 0 !important;
-    font-size: 5.5px !important;
+    font-size: 7.5px !important;
+    color: #000 !important;
     overflow: hidden !important;
     vertical-align: middle !important;
   }
 
-  /* Column widths — adds to exactly 100% */
-  .th-date      { width: 2.2% !important; font-size: 5px !important; }
-  .th-task      { font-size: 4.5px !important; }
-  .th-ampm      { width: 3.67% !important; font-size: 4px !important; }
-  .th-remarks   { width: 9% !important; font-size: 4.5px !important; }
-  .th-inspected { width: 8% !important; font-size: 4.5px !important; }
+  /* Column widths */
+  .th-date      { width: 2.2% !important; font-size: 6.5px !important; }
+  .th-task      { font-size: 6px !important; line-height: 1.4 !important; }
+  .th-ampm      { width: 3.67% !important; font-size: 6px !important; }
+  .th-remarks   { width: 9% !important; font-size: 6.5px !important; }
+  .th-inspected { width: 8% !important; font-size: 6.5px !important; }
 
-  .td-date { font-size: 5.5px !important; font-weight: 700 !important; }
+  .td-date { font-size: 7.5px !important; font-weight: 700 !important; color: #000 !important; }
   .td-remarks, .td-inspected {
-    font-size: 5px !important;
-    padding: 0 1px !important;
+    font-size: 7px !important;
+    color: #000 !important;
+    padding: 0 2px !important;
     text-align: left !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -386,13 +416,13 @@ function printRecord() {
   }
 
   .check-mark {
-    font-size: 6.5px !important;
+    font-size: 8.5px !important;
     color: #1a5c1a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   .x-mark {
-    font-size: 6.5px !important;
+    font-size: 8.5px !important;
     color: #dc2626 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -411,6 +441,23 @@ function printRecord() {
     background: #f5f5f5 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Prevent any row from breaking across pages */
+  tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+  thead { display: table-header-group !important; }
+
+  .print-footer {
+    display: flex !important;
+    justify-content: flex-start !important;
+    margin-top: 3px !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  .print-footer-label {
+    font-size: 10px !important;
+    color: #000 !important;
+    font-style: italic !important;
   }
 }
 
@@ -530,6 +577,9 @@ tr.locked > td { background: #fafafa; }
 .fade-saved-leave-to { opacity: 0; transform: translateX(8px); }
 .x-mark { color: #dc2626; font-weight: 700; font-size: 12px; }
 .leg-x { width: 20px; height: 20px; background: #fff0f0; border: 1px solid #fca5a5; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #dc2626; font-weight: 700; }
+
+/* Print footer — hidden on screen, shown only when printing */
+.print-footer { display: none; }
 
 /* ══════════════════════════════════════
    RESPONSIVE — RecordView

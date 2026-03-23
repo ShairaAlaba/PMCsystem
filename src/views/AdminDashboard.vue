@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <img src="@/assets/logopmc.png" alt="GSO PMC Logo" class="sidebar-logo-img" />
+        <img src="@/assets/pmclogo.png" alt="GSO PMC Logo" class="sidebar-logo-img" />
         <div class="sidebar-brand">
           <div class="sb-title">PMC SYSTEM</div>
           <div class="sb-sub">Admin Panel</div>
@@ -480,37 +480,39 @@ function doLogout() {
 
 .sidebar-header {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 14px 14px;
+  gap: 0;
+  padding: 14px 14px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 .sidebar-logo-img {
-  width: 40px;
-  height: 40px;
+  width: 94px;
+  height: 94px;
   object-fit: contain;
   object-position: center;
   display: block;
   flex-shrink: 0;
+  margin-bottom: 2px;
 }
 .sidebar-brand {
-  text-align: left;
+  text-align: center;
   flex: 1;
   min-width: 0;
 }
 .sb-title {
   color: #ffffff;
-  font-weight: 800; font-size: 13px;
+  font-weight: 800; font-size: 15px;
   letter-spacing: 1px;
   text-transform: uppercase;
+  line-height: 1.1;
 }
 .sb-sub {
   color: #f9dc07;
-  font-size: 10px; font-weight: 500;
+  font-size: 11px; font-weight: 500;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .sidebar-user {
@@ -889,9 +891,9 @@ tr:hover td { background: #f0f5f0 !important; }
     flex-shrink: 0;
     gap: 8px;
   }
-  .sidebar-logo-img { width: 30px; height: 30px; }
-  .sidebar-brand .sb-title { font-size: 11px; }
-  .sidebar-brand .sb-sub { display: none; }
+  .sidebar-logo-img { width: 46px; height: 46px; }
+  .sidebar-brand .sb-title { font-size: 13px; }
+  .sidebar-brand .sb-sub { font-size: 10px; }
 
   .sidebar-user { display: none; }
 
