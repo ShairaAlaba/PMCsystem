@@ -10,21 +10,17 @@
         <span>{{ record?.janitorName }}</span>
         <span class="top-month">— {{ months[record?.month - 1] }} {{ record?.year }}</span>
       </div>
-      <!-- Print button only for admin -->
       <div class="top-actions">
-        <!-- Save feedback -->
         <transition name="fade-saved">
           <span v-if="savedMsg" class="saved-msg">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
             Saved
           </span>
         </transition>
-        <!-- Save button for inspector -->
         <button v-if="!isAdmin && hasEdits" class="btn btn-primary" @click="saveAll">
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Save
         </button>
-        <!-- Print button for admin -->
         <button v-if="isAdmin" class="btn btn-primary" @click="printRecord">
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
           Print
@@ -33,17 +29,17 @@
     </div>
 
     <!-- Printable Area -->
-   <!-- Printable Area -->
-<div class="print-area" ref="printArea">
-  <!-- Print Header -->
-  <div class="print-header">
-    <div class="header-left">
-      <img src="../assets/1.png" alt="Caraga State University" class="header-img">
-    </div>
-    <div class="header-right">
-      <img src="../assets/2.png" alt="Bagong Pilipinas Logos" class="header-img">
-    </div>
-  </div>
+    <div class="print-area" ref="printArea">
+      <!-- Print Header -->
+      <div class="print-header">
+        <div class="header-left">
+          <img src="../assets/1.png" alt="Caraga State University" class="header-img">
+        </div>
+        <div class="header-right">
+          <img src="../assets/2.png" alt="Bagong Pilipinas Logos" class="header-img">
+        </div>
+      </div>
+
       <!-- Record Info -->
       <div class="rec-info">
         <div class="ri-field">
@@ -72,19 +68,19 @@
           <thead>
             <tr>
               <th rowspan="2" class="th-date">DATE</th>
-              <th colspan="2" class="th-task">Moping of floor</th>
-              <th colspan="2" class="th-task">Cleaning Lavatory</th>
-              <th colspan="2" class="th-task">Cleaning of water closet</th>
-              <th colspan="2" class="th-task">Cleaning wall tiles</th>
-              <th colspan="2" class="th-task">Cleaning of urinals</th>
-              <th colspan="2" class="th-task">Spraying Air Refresher</th>
-              <th colspan="2" class="th-task">Disposing of garbages</th>
-              <th colspan="2" class="th-task">Cleaning dust in the window</th>
-              <th colspan="2" class="th-task">Cleaning of mirror</th>
-              <th colspan="2" class="th-task">Checking of floor drain</th>
-              <th colspan="2" class="th-task">Checking of faucet</th>
+              <th colspan="2" class="th-task">Mopping<br>of Floor</th>
+              <th colspan="2" class="th-task">Cleaning<br>Lavatory</th>
+              <th colspan="2" class="th-task">Cleaning<br>Water Closet</th>
+              <th colspan="2" class="th-task">Cleaning<br>Wall Tiles</th>
+              <th colspan="2" class="th-task">Cleaning<br>of Urinals</th>
+              <th colspan="2" class="th-task">Spraying<br>Air Refresher</th>
+              <th colspan="2" class="th-task">Disposing<br>of Garbage</th>
+              <th colspan="2" class="th-task">Cleaning<br>Dust/Window</th>
+              <th colspan="2" class="th-task">Cleaning<br>of Mirror</th>
+              <th colspan="2" class="th-task">Checking<br>Floor Drain</th>
+              <th colspan="2" class="th-task">Checking<br>of Faucet</th>
               <th rowspan="2" class="th-remarks">REMARKS</th>
-              <th rowspan="2" class="th-inspected">INSPECTED BY</th>
+              <th rowspan="2" class="th-inspected">INSPECTED<br>BY</th>
             </tr>
             <tr>
               <th class="th-ampm" v-for="n in 22" :key="n">{{ n % 2 === 1 ? 'AM' : 'PM' }}</th>
@@ -93,45 +89,32 @@
           <tbody>
             <tr v-for="(day, idx) in record?.days" :key="idx" :class="{today: isToday(day.day), locked: !canEdit(day.day)}">
               <td class="td-date">{{ day.day }}</td>
-              <!-- Mop Floor -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'mopFloor')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.mopFloor" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'mopFloor')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.mopFloor" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Lavatory -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanLavatory')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanLavatory" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanLavatory')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanLavatory" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Water Closet -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanWaterCloset')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanWaterCloset" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanWaterCloset')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanWaterCloset" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Wall Tiles -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanWallTiles')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanWallTiles" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanWallTiles')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanWallTiles" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Urinals -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanUrinals')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanUrinals" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanUrinals')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanUrinals" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Spray Air -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'sprayAir')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.sprayAir" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'sprayAir')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.sprayAir" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Garbage -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'disposeGarbage')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.disposeGarbage" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'disposeGarbage')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.disposeGarbage" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Dust Window -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanDustWindow')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanDustWindow" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanDustWindow')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanDustWindow" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Mirror -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanMirror')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanMirror" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanMirror')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanMirror" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Floor Drain -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'checkFloorDrain')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.checkFloorDrain" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'checkFloorDrain')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.checkFloorDrain" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Faucet -->
               <td><div class="cell-wrap" @click="toggle(idx, 'am', 'checkFaucet')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.checkFaucet" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
               <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'checkFaucet')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.checkFaucet" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <!-- Remarks -->
               <td class="td-remarks">
                 <input v-if="canEdit(day.day)" v-model="day.remarks" @change="saveRemarks(idx, day.remarks)" type="text" class="remarks-input" placeholder="..." />
                 <span v-else>{{ day.remarks }}</span>
               </td>
-              <!-- Inspected By -->
               <td class="td-inspected">
                 <input v-if="canEdit(day.day)" v-model="day.inspectedBy" @change="saveInspectedBy(idx, day.inspectedBy)" type="text" class="remarks-input" placeholder="..." />
                 <span v-else>{{ day.inspectedBy }}</span>
@@ -140,6 +123,7 @@
           </tbody>
         </table>
       </div>
+
       <!-- Print Footer -->
       <div class="print-footer">
         <span class="print-footer-label">F-GEN-PMC-003b Rev. 3, {{ printDate }}</span>
@@ -148,21 +132,11 @@
 
     <!-- Legend -->
     <div class="legend no-print">
-      <div class="legend-item">
-        <div class="leg-check">✓</div> Completed
-      </div>
-      <div class="legend-item">
-        <div class="leg-x">✗</div> Not done (past/today)
-      </div>
-      <div class="legend-item">
-        <div class="leg-empty"></div> Future / N/A
-      </div>
-      <div class="legend-item today-leg">
-        <div class="leg-today"></div> Today (editable)
-      </div>
-      <div class="legend-item">
-        <div class="leg-locked"></div> Locked (past/future)
-      </div>
+      <div class="legend-item"><div class="leg-check">✓</div> Completed</div>
+      <div class="legend-item"><div class="leg-x">✗</div> Not done (past/today)</div>
+      <div class="legend-item"><div class="leg-empty"></div> Future / N/A</div>
+      <div class="legend-item today-leg"><div class="leg-today"></div> Today (editable)</div>
+      <div class="legend-item"><div class="leg-locked"></div> Locked (past/future)</div>
     </div>
   </div>
 </template>
@@ -178,42 +152,30 @@ const router = useRouter()
 const pmc = usePmcStore()
 const auth = useAuthStore()
 
-// Refresh store from localStorage so record is always found on direct navigation
-onMounted(() => {
-  pmc.refresh()
-})
+onMounted(() => { pmc.refresh() })
 
 const isAdmin = computed(() => auth.isAdmin)
-
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const now = new Date()
 const todayDate = now.getDate()
 const todayMonth = now.getMonth() + 1
 const todayYear = now.getFullYear()
-
 const record = computed(() => pmc.getRecord(route.params.id))
 
-// Auto-generated date label: dd/mm/yyyy  ← FIX #1: 4-digit year
 const printDate = computed(() => {
-  const d = now
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = String(d.getFullYear())
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const yyyy = String(now.getFullYear())
   return `${dd}/${mm}/${yyyy}`
 })
 
-// Track unsaved edits & save feedback
 const hasEdits = ref(false)
 const savedMsg = ref(false)
-const hasSaved = ref(false) // becomes true only after inspector hits Save
+const hasSaved = ref(false)
 let savedTimer = null
 
-// Back: always go to the correct dashboard
-function goBack() {
-  router.push(auth.isAdmin ? '/admin' : '/inspector')
-}
+function goBack() { router.push(auth.isAdmin ? '/admin' : '/inspector') }
 
-// Show "Saved" flash then hide after 2.5s
 function flashSaved() {
   savedMsg.value = true
   hasEdits.value = false
@@ -222,32 +184,21 @@ function flashSaved() {
   savedTimer = setTimeout(() => { savedMsg.value = false }, 2500)
 }
 
-// Explicit Save button — persists current state to localStorage
-function saveAll() {
-  pmc.save()
-  flashSaved()
-}
+function saveAll() { pmc.save(); flashSaved() }
 
 function shouldShowX(day) {
   if (!record.value) return false
   const recYear = record.value.year
   const recMonth = record.value.month
-  // Entire record is in a past year
   if (recYear < todayYear) return true
-  // Record is in a past month of the current year
   if (recYear === todayYear && recMonth < todayMonth) return true
-  // Record is in the current month:
   if (recYear === todayYear && recMonth === todayMonth) {
-    // Past days always show ✗
     if (day < todayDate) return true
     if (day === todayDate) {
-      // Admin always sees ✗ on unchecked cells (records are already saved)
       if (auth.isAdmin) return true
-      // Inspector: ✗ only appears after they click Save this session
       return hasSaved.value
     }
   }
-  // Future month — no ✗
   return false
 }
 
@@ -256,7 +207,6 @@ function isToday(day) {
 }
 
 function canEdit(day) {
-  // Admin is read-only; only inspector can edit, and only today's row
   if (!record.value) return false
   if (auth.isAdmin) return false
   if (record.value.year !== todayYear || record.value.month !== todayMonth) return false
@@ -270,23 +220,13 @@ function toggle(dayIdx, amPm, field) {
   hasEdits.value = true
 }
 
-function saveRemarks(dayIdx, val) {
-  pmc.updateDayRemarks(route.params.id, dayIdx, val)
-  hasEdits.value = true
-}
-
-function saveInspectedBy(dayIdx, val) {
-  pmc.updateDayInspectedBy(route.params.id, dayIdx, val)
-  hasEdits.value = true
-}
-
-function printRecord() {
-  window.print()
-}
+function saveRemarks(dayIdx, val) { pmc.updateDayRemarks(route.params.id, dayIdx, val); hasEdits.value = true }
+function saveInspectedBy(dayIdx, val) { pmc.updateDayInspectedBy(route.params.id, dayIdx, val); hasEdits.value = true }
+function printRecord() { window.print() }
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
 
 .record-page { min-height: 100vh; background: var(--green-mist); }
 
@@ -316,10 +256,9 @@ function printRecord() {
    ===================== */
 @media print {
   @page {
-    /* Long bond paper landscape: 13in × 8.5in — ONE PAGE ONLY */
     size: 13in 8.5in;
-    /* FIX #7: added top margin so content isn't flush against the paper edge */
-    margin: 10mm 5mm 4mm 5mm;
+    /* margin: 0 removes all browser-injected title / date / page-number headers & footers */
+    margin: 0;
   }
 
   .no-print, .legend, .top-bar { display: none !important; }
@@ -327,23 +266,25 @@ function printRecord() {
 
   .print-area {
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 8mm 6mm 5mm 6mm !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     overflow: visible !important;
     width: 100% !important;
-    height: 197mm !important;
-    max-height: 197mm !important;
+    box-sizing: border-box !important;
+    height: 215.9mm !important;
+    max-height: 215.9mm !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
+  /* ── Header images ── */
   .print-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     width: 100% !important;
-    margin: 0 0 10px 0 !important;
+    margin: 0 0 3mm 0 !important;
     padding: 0 !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
@@ -351,15 +292,24 @@ function printRecord() {
   .header-left, .header-right { flex: 0 0 auto !important; }
   .header-img { max-height: 90px !important; height: auto !important; display: block !important; object-fit: contain !important; }
 
-  /* Record info rows */
+  /* ── Record info ── */
   .rec-info { display: flex !important; gap: 24px !important; margin-bottom: 2px !important; margin-top: 2px !important; flex-wrap: nowrap !important; flex-shrink: 0 !important; }
   .ri-label { font-size: 10px !important; font-weight: 700 !important; color: #000 !important; white-space: nowrap !important; }
   .ri-value { font-size: 10px !important; color: #000 !important; min-width: 70px !important; }
-  /* FIX #3: wider underlined value areas for Building Name, Month, Inspected By */
   .ri-value--wide { min-width: 160px !important; }
 
   .table-wrap { overflow: visible !important; width: 100% !important; flex: 1 !important; }
 
+  /* ══════════════════════════════════════
+     TABLE — uniform layout
+     Column budget (13in landscape, ~297mm usable after padding):
+       DATE         :  3%
+       22 AM/PM cols:  3% each  → 66%
+       REMARKS      : 16%
+       INSPECTED BY : 15%
+       TOTAL        : 100%
+     Task header rows span 2 AM/PM cols = 6% each (via colspan="2")
+     ══════════════════════════════════════ */
   .pmc-table {
     width: 100% !important;
     min-width: 0 !important;
@@ -367,55 +317,86 @@ function printRecord() {
     border-collapse: collapse !important;
   }
 
+  /* Fixed column widths */
+  .th-date      { width: 3%  !important; }
+  .th-ampm      { width: 3%  !important; }
+  .th-remarks   { width: 11% !important; }
+  .th-inspected { width: 10% !important; }
+
+  /* ── All <th> cells — shared base styles ── */
   .pmc-table th {
     font-family: 'Poppins', sans-serif !important;
     font-weight: 700 !important;
-    -webkit-font-smoothing: auto !important;
-    font-size: 6.5px !important;
-    padding: 3px 1px !important;
-    line-height: 1.4 !important;
+    font-size: 5.8px !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0.02em !important;
+    text-align: center !important;
+    vertical-align: middle !important;
     color: #fff !important;
-    background: #0a8f0a !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    background: #1a5c1a !important;
+    border: 1px solid #000 !important;
+    padding: 2px 1px !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
     white-space: normal !important;
-    vertical-align: middle !important;
-    overflow: visible !important;
-  }
-
-  /* AM/PM header cells — yellow background, black bold text */
-  .pmc-table thead tr:nth-child(2) th,
-  .th-ampm {
-    font-family: 'Poppins', sans-serif !important;
-    font-weight: 700 !important;
-    background: #f9dc07 !important;
-    color: #000 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
+  /* Task header row — fixed height so all 11 task cells are identical */
+  .pmc-table thead tr:first-child th {
+    height: 6mm !important;
+  }
+
+  /* DATE / REMARKS / INSPECTED BY span both header rows — centered */
+  .th-date, .th-remarks, .th-inspected {
+    font-size: 6px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+  }
+
+  /* ── AM / PM row — yellow, uniform height ── */
+  .pmc-table thead tr:nth-child(2) th.th-ampm {
+    background: #f9dc07 !important;
+    color: #000 !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 6px !important;
+    letter-spacing: 0.05em !important;
+    height: 4.5mm !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ── Data cells ── */
   .pmc-table td {
     height: 4.2mm !important;
     max-height: 4.2mm !important;
     padding: 0 !important;
-    font-size: 7.5px !important;
+    font-size: 7px !important;
     color: #000 !important;
-    overflow: hidden !important;
+    text-align: center !important;
     vertical-align: middle !important;
+    border: 1px solid #808080 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Column widths */
-  .th-date      { width: 2.2% !important; font-size: 6.5px !important; }
-  .th-task      { font-size: 6px !important; line-height: 1.4 !important; }
-  .th-ampm      { width: 3.67% !important; font-size: 6px !important; }
-  .th-remarks   { width: 9% !important; font-size: 6.5px !important; }
-  .th-inspected { width: 8% !important; font-size: 6.5px !important; }
-
-  .td-date { font-size: 7.5px !important; font-weight: 700 !important; color: #000 !important; }
-  .td-remarks, .td-inspected {
+  .td-date {
     font-size: 7px !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+    background: #efefef !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .td-remarks, .td-inspected {
+    font-size: 6.5px !important;
     color: #000 !important;
     padding: 0 2px !important;
     text-align: left !important;
@@ -425,13 +406,13 @@ function printRecord() {
   }
 
   .check-mark {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     color: #1a5c1a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   .x-mark {
-    font-size: 8.5px !important;
+    font-size: 8px !important;
     color: #dc2626 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -452,21 +433,21 @@ function printRecord() {
     print-color-adjust: exact !important;
   }
 
-  /* Prevent any row from breaking across pages */
   tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   thead { display: table-header-group !important; }
 
+  /* ── Footer pinned to bottom edge ── */
   .print-footer {
     display: flex !important;
     justify-content: flex-start !important;
     margin-top: auto !important;
-    padding-top: 4px !important;
+    padding-top: 3px !important;
     padding-bottom: 0 !important;
     flex-shrink: 0 !important;
   }
-  /* FIX #6: remove italic from footer label */
   .print-footer-label {
-    font-size: 10px !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 9px !important;
     color: #000 !important;
     font-style: normal !important;
   }
@@ -487,11 +468,7 @@ function printRecord() {
 .header-left, .header-right { flex: 0 0 auto; }
 .header-img { max-height: 70px; height: auto; display: block; object-fit: contain; }
 
-.rec-info {
-  display: flex;
-  gap: 32px;
-  margin-bottom: 4px;
-}
+.rec-info { display: flex; gap: 32px; margin-bottom: 4px; }
 .ri-field { display: flex; gap: 6px; align-items: baseline; }
 .ri-label { font-size: 12px; font-weight: 600; color: var(--gray-700); white-space: nowrap; }
 .ri-value {
@@ -499,51 +476,58 @@ function printRecord() {
   border-bottom: 1px solid var(--gray-400);
   padding-bottom: 2px;
 }
-/* Screen wide variant (same as normal on screen) */
 .ri-value--wide { min-width: 200px; }
 
 .pmc-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1400px;
+  min-width: 1100px;
   font-size: 11px;
   margin-top: 12px;
 }
 .pmc-table th {
   background: #1a5c1a;
   color: white;
-  padding: 5px 3px;
-  font-size: 10px;
+  padding: 6px 4px;
+  font-size: 9.5px;
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
   text-align: center;
-  border: 1px solid #333;
   vertical-align: middle;
-  line-height: 1.2;
+  border: 1px solid #000;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+  white-space: normal;
 }
-/* AM/PM yellow — screen and print */
-.th-ampm {
+.pmc-table .th-ampm {
   width: 22px;
-  font-size: 9px;
+  font-size: 8.5px;
   font-family: 'Poppins', sans-serif;
-  font-weight: 700;
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
   background: #f9dc07 !important;
   color: #000 !important;
 }
 .pmc-table td {
   padding: 2px;
-  border: 1px solid #bbb;
+  border: 1px solid #808080;
   text-align: center;
   vertical-align: middle;
   height: 22px;
   min-width: 22px;
 }
-.th-date { width: 28px; font-size: 10px; }
-.th-task { min-width: 60px; font-size: 9px; line-height: 1.1; }
-.th-remarks { min-width: 120px; }
-.th-inspected { min-width: 100px; }
+.th-date { width: 28px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.th-task { min-width: 44px; font-size: 9px; line-height: 1.35; }
+.th-remarks { width: 72px; min-width: 72px; max-width: 72px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.th-inspected { width: 72px; min-width: 72px; max-width: 72px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 .td-date { font-weight: 700; background: #f5f5f5; font-size: 12px; }
-.td-remarks, .td-inspected { text-align: left; padding: 2px 4px; }
+.td-remarks, .td-inspected {
+  text-align: left; padding: 2px 4px;
+  max-width: 72px; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis;
+}
 
 tr.today > td { background: #fffde7 !important; }
 tr.locked > td { background: #fafafa; }
@@ -582,14 +566,9 @@ tr.locked > td { background: #fafafa; }
 .save-btn { animation: pulse 0.3s ease; }
 
 .saved-msg {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--green-forest);
-  font-size: 13px;
-  font-weight: 600;
-  background: var(--green-pale);
-  padding: 6px 12px;
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--green-forest); font-size: 13px; font-weight: 600;
+  background: var(--green-pale); padding: 6px 12px;
   border-radius: var(--radius-sm);
 }
 
@@ -600,25 +579,20 @@ tr.locked > td { background: #fafafa; }
 .x-mark { color: #dc2626; font-weight: 700; font-size: 12px; }
 .leg-x { width: 20px; height: 20px; background: #fff0f0; border: 1px solid #fca5a5; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #dc2626; font-weight: 700; }
 
-/* Print footer — hidden on screen, shown only when printing */
+/* Print footer — hidden on screen */
 .print-footer { display: none; }
 
 /* ══════════════════════════════════════
-   RESPONSIVE — RecordView
+   RESPONSIVE
    ══════════════════════════════════════ */
 @media (max-width: 768px) {
   .top-bar { padding: 10px 14px; gap: 10px; }
   .top-title { font-size: 13px; }
   .top-month { display: none; }
   .btn { font-size: 13px; padding: 9px 14px; }
-
   .print-area { margin: 10px; padding: 14px; }
-
-  /* Table scrolls horizontally — this is correct for 25 columns */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
   .legend { flex-wrap: wrap; gap: 8px; padding: 10px 14px; margin: 0 10px 14px; font-size: 12px; }
-
   .rec-info { gap: 12px; flex-wrap: wrap; }
   .ri-value { min-width: 100px; }
 }
