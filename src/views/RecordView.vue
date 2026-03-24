@@ -48,15 +48,15 @@
       <div class="rec-info">
         <div class="ri-field">
           <span class="ri-label">Building Name:</span>
-          <span class="ri-value">{{ record?.buildingName }}</span>
+          <span class="ri-value ri-value--wide">{{ record?.buildingName }}</span>
         </div>
         <div class="ri-field">
           <span class="ri-label">Month:</span>
-          <span class="ri-value">{{ months[record?.month - 1] }} {{ record?.year }}</span>
+          <span class="ri-value ri-value--wide">{{ months[record?.month - 1] }} {{ record?.year }}</span>
         </div>
         <div class="ri-field">
           <span class="ri-label">Inspected by:</span>
-          <span class="ri-value">{{ record?.inspectorName }}</span>
+          <span class="ri-value ri-value--wide">{{ record?.inspectorName }}</span>
         </div>
       </div>
       <div class="rec-info" style="margin-bottom: 8px;">
@@ -193,13 +193,13 @@ const todayYear = now.getFullYear()
 
 const record = computed(() => pmc.getRecord(route.params.id))
 
-// Auto-generated date label: dd/mm/yy
+// Auto-generated date label: dd/mm/yyyy  ← FIX #1: 4-digit year
 const printDate = computed(() => {
   const d = now
   const dd = String(d.getDate()).padStart(2, '0')
   const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yy = String(d.getFullYear()).slice(-2)
-  return `${dd}/${mm}/${yy}`
+  const yyyy = String(d.getFullYear())
+  return `${dd}/${mm}/${yyyy}`
 })
 
 // Track unsaved edits & save feedback
@@ -286,6 +286,8 @@ function printRecord() {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&display=swap');
+
 .record-page { min-height: 100vh; background: var(--green-mist); }
 
 .top-bar {
@@ -316,7 +318,8 @@ function printRecord() {
   @page {
     /* Long bond paper landscape: 13in × 8.5in — ONE PAGE ONLY */
     size: 13in 8.5in;
-    margin: 4mm 5mm 4mm 5mm;
+    /* FIX #7: added top margin so content isn't flush against the paper edge */
+    margin: 10mm 5mm 4mm 5mm;
   }
 
   .no-print, .legend, .top-bar { display: none !important; }
@@ -329,42 +332,34 @@ function printRecord() {
     border-radius: 0 !important;
     overflow: visible !important;
     width: 100% !important;
-    height: 207mm !important;
-    max-height: 207mm !important;
+    height: 197mm !important;
+    max-height: 197mm !important;
     display: flex !important;
     flex-direction: column !important;
   }
 
-  /* Header: images at both edges */
   .print-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     width: 100% !important;
-    margin: 0 0 2px 0 !important;
+    margin: 0 0 10px 0 !important;
     padding: 0 !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
   }
   .header-left, .header-right { flex: 0 0 auto !important; }
-  .header-img { max-height: 62px !important; height: auto !important; display: block !important; object-fit: contain !important; }
+  .header-img { max-height: 90px !important; height: auto !important; display: block !important; object-fit: contain !important; }
 
   /* Record info rows */
-  .rec-info { display: flex !important; gap: 16px !important; margin-bottom: 1.5px !important; margin-top: 1.5px !important; flex-wrap: nowrap !important; flex-shrink: 0 !important; }
+  .rec-info { display: flex !important; gap: 24px !important; margin-bottom: 2px !important; margin-top: 2px !important; flex-wrap: nowrap !important; flex-shrink: 0 !important; }
   .ri-label { font-size: 10px !important; font-weight: 700 !important; color: #000 !important; white-space: nowrap !important; }
   .ri-value { font-size: 10px !important; color: #000 !important; min-width: 70px !important; }
+  /* FIX #3: wider underlined value areas for Building Name, Month, Inspected By */
+  .ri-value--wide { min-width: 160px !important; }
 
   .table-wrap { overflow: visible !important; width: 100% !important; flex: 1 !important; }
 
-  /*
-   * Long bond landscape usable: ~320mm wide, ~207mm tall
-   * Header logos:    ~14mm
-   * Rec info ×2:     ~6mm
-   * TH rows ×2:       ~10mm  (given proper line-height + padding)
-   * 31 rows × 4.2mm:  ~130mm
-   * Footer:          ~3mm
-   * TOTAL:           ~163mm  ✓ fits in 207mm
-   */
   .pmc-table {
     width: 100% !important;
     min-width: 0 !important;
@@ -373,11 +368,14 @@ function printRecord() {
   }
 
   .pmc-table th {
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 700 !important;
+    -webkit-font-smoothing: auto !important;
     font-size: 6.5px !important;
     padding: 3px 1px !important;
     line-height: 1.4 !important;
     color: #fff !important;
-    background: #1a5c1a !important;
+    background: #0a8f0a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     word-break: break-word !important;
@@ -385,6 +383,17 @@ function printRecord() {
     white-space: normal !important;
     vertical-align: middle !important;
     overflow: visible !important;
+  }
+
+  /* AM/PM header cells — yellow background, black bold text */
+  .pmc-table thead tr:nth-child(2) th,
+  .th-ampm {
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 700 !important;
+    background: #f9dc07 !important;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .pmc-table td {
@@ -450,14 +459,16 @@ function printRecord() {
   .print-footer {
     display: flex !important;
     justify-content: flex-start !important;
-    margin-top: 3px !important;
-    padding: 0 !important;
+    margin-top: auto !important;
+    padding-top: 4px !important;
+    padding-bottom: 0 !important;
     flex-shrink: 0 !important;
   }
+  /* FIX #6: remove italic from footer label */
   .print-footer-label {
     font-size: 10px !important;
     color: #000 !important;
-    font-style: italic !important;
+    font-style: normal !important;
   }
 }
 
@@ -488,6 +499,8 @@ function printRecord() {
   border-bottom: 1px solid var(--gray-400);
   padding-bottom: 2px;
 }
+/* Screen wide variant (same as normal on screen) */
+.ri-value--wide { min-width: 200px; }
 
 .pmc-table {
   width: 100%;
@@ -501,11 +514,21 @@ function printRecord() {
   color: white;
   padding: 5px 3px;
   font-size: 10px;
-  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
   text-align: center;
   border: 1px solid #333;
   vertical-align: middle;
   line-height: 1.2;
+}
+/* AM/PM yellow — screen and print */
+.th-ampm {
+  width: 22px;
+  font-size: 9px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  background: #f9dc07 !important;
+  color: #000 !important;
 }
 .pmc-table td {
   padding: 2px;
@@ -517,7 +540,6 @@ function printRecord() {
 }
 .th-date { width: 28px; font-size: 10px; }
 .th-task { min-width: 60px; font-size: 9px; line-height: 1.1; }
-.th-ampm { width: 22px; font-size: 9px; background: #2d7a2d; }
 .th-remarks { min-width: 120px; }
 .th-inspected { min-width: 100px; }
 .td-date { font-weight: 700; background: #f5f5f5; font-size: 12px; }
