@@ -12,14 +12,10 @@
     <nav class="navbar">
       <div class="nav-brand">
         <div class="nav-logo">
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <path d="M16 2L4 8v8c0 7.73 5.15 14.97 12 17 6.85-2.03 12-9.27 12-17V8L16 2z" fill="var(--green-primary)" opacity="0.2"/>
-            <path d="M16 2L4 8v8c0 7.73 5.15 14.97 12 17 6.85-2.03 12-9.27 12-17V8L16 2z" stroke="var(--green-primary)" stroke-width="2" fill="none"/>
-            <path d="M11 16l3 3 7-7" stroke="var(--green-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <img :src="pmcLogo" alt="PMC Logo" class="nav-logo-img" />
         </div>
         <div>
-          <div class="nav-title">CSU PMC System</div>
+          <div class="nav-title">Caraga State University - PMC System</div>
           <div class="nav-sub">General Services Office</div>
         </div>
       </div>
@@ -53,88 +49,21 @@
         </div>
         <div class="hero-stats animate-fadeUp" style="animation-delay:0.5s">
           <div class="stat">
-            <div class="stat-value">ISO</div>
-            <div class="stat-label">9001 Certified</div>
+     
           </div>
           <div class="stat-divider"></div>
           <div class="stat">
-            <div class="stat-value">31</div>
-            <div class="stat-label">Days Tracked</div>
+            
           </div>
           <div class="stat-divider"></div>
           <div class="stat">
-            <div class="stat-value">11</div>
-            <div class="stat-label">Checklist Items</div>
+         
           </div>
         </div>
       </div>
       <div class="hero-visual animate-fadeIn" style="animation-delay:0.3s">
-        <div class="visual-card card1">
-          <div class="vc-header">
-            <div class="vc-dot green"></div>
-            <span>Today's Checklist</span>
-          </div>
-          <div class="vc-items">
-            <div class="vc-item checked">
-              <div class="vc-check">✓</div>
-              <span>Mopping of Floor</span>
-            </div>
-            <div class="vc-item checked">
-              <div class="vc-check">✓</div>
-              <span>Cleaning Lavatory</span>
-            </div>
-            <div class="vc-item checked">
-              <div class="vc-check">✓</div>
-              <span>Cleaning Water Closet</span>
-            </div>
-            <div class="vc-item">
-              <div class="vc-box"></div>
-              <span>Cleaning Wall Tiles</span>
-            </div>
-            <div class="vc-item">
-              <div class="vc-box"></div>
-              <span>Spraying Air Refresher</span>
-            </div>
-          </div>
-        </div>
-        <div class="visual-card card2">
-          <div class="vc-header">
-            <div class="vc-dot orange"></div>
-            <span>Inspector Status</span>
-          </div>
-          <div class="inspector-list">
-            <div class="insp-item">
-              <div class="insp-avatar">JD</div>
-              <div>
-                <div class="insp-name">Juan Dela Cruz</div>
-                <div class="insp-status online">● Online</div>
-              </div>
-            </div>
-            <div class="insp-item">
-              <div class="insp-avatar">MR</div>
-              <div>
-                <div class="insp-name">Maria Reyes</div>
-                <div class="insp-status offline">● Offline</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="visual-card card3">
-          <div class="vc-mini-label">Monthly Progress</div>
-          <div class="progress-bars">
-            <div class="pb-item">
-              <span>Week 1</span>
-              <div class="pb-track"><div class="pb-fill" style="width:100%"></div></div>
-            </div>
-            <div class="pb-item">
-              <span>Week 2</span>
-              <div class="pb-track"><div class="pb-fill" style="width:85%"></div></div>
-            </div>
-            <div class="pb-item">
-              <span>Week 3</span>
-              <div class="pb-track"><div class="pb-fill w3"></div></div>
-            </div>
-          </div>
+        <div class="hero-image-wrap">
+          <img :src="notFoundImg" alt="CSU PMC System Illustration" class="hero-img" />
         </div>
       </div>
     </section>
@@ -172,6 +101,7 @@
     <footer class="footer">
       <div class="footer-inner">
         <div class="footer-brand">
+          <img :src="pmcLogo" alt="PMC Logo" class="footer-logo-img" />
           <strong>Caraga State University</strong> — General Services Office
         </div>
         <div class="footer-links">
@@ -184,6 +114,9 @@
 </template>
 
 <script setup>
+import notFoundImg from '@/assets/404.png'
+import pmcLogo from '@/assets/pmclogo.png'
+
 const features = [
   {
     icon: `<svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`,
@@ -281,19 +214,25 @@ const features = [
   align-items: center;
   justify-content: space-between;
   padding: 16px 60px;
-  background: rgba(255,255,255,0.85);
+  background: rgb(2, 59, 7);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0,192,75,0.1);
 }
 .nav-brand { display: flex; align-items: center; gap: 12px; }
 .nav-logo {
   width: 44px; height: 44px;
-  background: var(--green-pale);
-  border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
 }
-.nav-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--green-darkest); }
-.nav-sub { font-size: 11px; color: var(--gray-500); }
+.nav-logo-img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+}
+.nav-title {
+  color: #ffffff;
+  font-weight: 600; /* optional for better visibility */
+}
+.nav-sub { font-size: 11px; color: #ffffffbb; }
 .nav-cta { padding: 10px 22px; font-size: 14px; }
 
 /* Hero */
@@ -372,65 +311,23 @@ const features = [
 
 /* Hero Visual */
 .hero-visual {
-  position: relative;
-  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0;
 }
-.visual-card {
-  position: absolute;
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xl);
-  padding: 20px;
-  border: 1px solid rgba(0,192,75,0.1);
+.hero-image-wrap {
+  width: 100%;
+  max-width: 560px;
+  animation: float 6s ease-in-out infinite;
 }
-.card1 { width: 260px; top: 20px; left: 0; animation: float 6s ease-in-out infinite; }
-.card2 { width: 220px; top: 40px; right: 20px; animation: float 8s ease-in-out 1s infinite reverse; }
-.card3 { width: 240px; bottom: 40px; left: 60px; animation: float 7s ease-in-out 2s infinite; }
-.vc-header {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600; color: var(--gray-700);
-  margin-bottom: 14px;
+.hero-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 48px rgba(0, 51, 0, 0.18));
 }
-.vc-dot { width: 8px; height: 8px; border-radius: 50%; }
-.vc-dot.green { background: #00c04b; }
-.vc-dot.orange { background: #f59e0b; }
-.vc-items { display: flex; flex-direction: column; gap: 8px; }
-.vc-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--gray-700); }
-.vc-check {
-  width: 18px; height: 18px;
-  background: var(--green-primary);
-  color: white;
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; flex-shrink: 0;
-}
-.vc-box {
-  width: 18px; height: 18px;
-  border: 2px solid var(--gray-300);
-  border-radius: 4px; flex-shrink: 0;
-}
-.vc-item.checked span { text-decoration: line-through; color: var(--gray-400); }
-.inspector-list { display: flex; flex-direction: column; gap: 10px; }
-.insp-item { display: flex; align-items: center; gap: 10px; }
-.insp-avatar {
-  width: 34px; height: 34px;
-  background: var(--green-pale);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: var(--green-forest);
-}
-.insp-name { font-size: 12px; font-weight: 600; color: var(--gray-700); }
-.insp-status { font-size: 11px; }
-.insp-status.online { color: #16a34a; }
-.insp-status.offline { color: #dc2626; }
-.vc-mini-label { font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 12px; }
-.progress-bars { display: flex; flex-direction: column; gap: 8px; }
-.pb-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--gray-600); }
-.pb-item span { width: 40px; flex-shrink: 0; }
-.pb-track { flex: 1; height: 8px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
-.pb-fill { height: 100%; background: linear-gradient(90deg, var(--green-primary), var(--green-light)); border-radius: 99px; }
-.w3 { width: 45%; }
 
 /* Features */
 .features {
@@ -502,10 +399,10 @@ const features = [
   position: relative;
   z-index: 1;
   background: var(--green-darkest);
-  padding: 28px 60px;
+  padding: 8px 10px;
 }
 .footer-inner {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -513,30 +410,113 @@ const features = [
   color: rgba(255,255,255,0.5);
   font-size: 13px;
 }
-.footer-brand { color: rgba(255,255,255,0.8); }
+.footer-brand {
+  color: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.footer-logo-img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
 .footer-links { display: flex; gap: 24px; }
 
+/* ── Tablet (≤1024px) ── */
 @media (max-width: 1024px) {
-  .hero { grid-template-columns: 1fr; padding: 90px 32px 60px; }
-  .hero-visual { display: none; }
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 90px 32px 60px;
+    gap: 40px;
+    min-height: auto;
+  }
+  .hero-visual { justify-content: center; order: -1; } /* image above text on tablet */
+  .hero-image-wrap { max-width: 400px; }
+  .hero-desc { max-width: 100%; }
 }
+
+/* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
-  .navbar { padding: 12px 20px; }
+  /* Navbar */
+  .navbar {
+    padding: 10px 16px;
+    gap: 10px;
+  }
+  .nav-brand { gap: 8px; flex: 1; min-width: 0; }
+  .nav-logo { width: 36px; height: 36px; }
+  .nav-logo-img { width: 42px; height: 42px; }
+  .nav-title {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .nav-sub { display: none; }
-  .hero { padding: 80px 20px 48px; }
-  .hero-title { font-size: clamp(36px, 10vw, 56px); }
-  .hero-desc { font-size: 15px; }
-  .hero-actions { flex-direction: column; gap: 10px; }
-  .btn-lg { padding: 14px 28px; font-size: 15px; width: 100%; justify-content: center; }
-  .hero-stats { gap: 16px; }
+  .nav-cta { padding: 8px 16px; font-size: 13px; flex-shrink: 0; }
+
+  /* Hero */
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 76px 18px 40px;
+    gap: 28px;
+  }
+  .hero-visual { order: -1; }
+  .hero-image-wrap { max-width: 280px; margin: 0 auto; }
+  .hero-badge { font-size: 11px; padding: 6px 12px; }
+  .hero-title { font-size: clamp(32px, 9vw, 52px); margin-bottom: 16px; }
+  .hero-desc { font-size: 14px; line-height: 1.65; margin-bottom: 24px; max-width: 100%; }
+  .hero-actions { flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .btn-lg { padding: 14px 24px; font-size: 15px; width: 100%; justify-content: center; }
+  .hero-stats { gap: 16px; justify-content: flex-start; }
   .stat-value { font-size: 20px; }
-  .features { padding: 48px 20px; }
-  .features-grid { grid-template-columns: 1fr; gap: 16px; }
-  .section-title { font-size: clamp(24px, 7vw, 38px); margin-bottom: 36px; }
-  .cta-section { padding: 48px 20px; }
-  .cta-content h2 { font-size: clamp(28px, 8vw, 44px); }
-  .footer { padding: 20px 20px; }
-  .footer-inner { flex-direction: column; gap: 10px; text-align: center; }
-  .footer-links { flex-direction: column; gap: 4px; }
+  .stat-label { font-size: 11px; }
+  .stat-divider { height: 30px; }
+
+  /* Features */
+  .features { padding: 52px 18px; }
+  /* Force 1 column — override the 320px min */
+  .features-grid { grid-template-columns: 1fr; gap: 14px; }
+  .section-label { font-size: 11px; letter-spacing: 2px; }
+  .section-title { font-size: clamp(22px, 7vw, 36px); margin-bottom: 28px; }
+  .feature-card { padding: 20px; }
+  .feature-icon { width: 42px; height: 42px; margin-bottom: 12px; }
+  .feature-card h3 { font-size: 15px; }
+  .feature-card p { font-size: 13px; }
+
+  /* CTA */
+  .cta-section { padding: 52px 18px; }
+  .cta-content h2 { font-size: clamp(26px, 8vw, 40px); margin-bottom: 12px; }
+  .cta-content p { font-size: 15px; margin-bottom: 24px; }
+
+  /* Footer */
+  .footer { padding: 14px 16px; }
+  .footer-inner { flex-direction: column; gap: 8px; text-align: center; }
+  .footer-brand { justify-content: center; font-size: 12px; }
+  .footer-logo-img { width: 40px; height: 40px; } /* was 82px — way too big on mobile */
+  .footer-links { flex-direction: column; gap: 3px; font-size: 11px; }
+}
+
+/* ── Small mobile (≤480px) ── */
+@media (max-width: 480px) {
+  .navbar { padding: 8px 12px; }
+  .nav-logo-img { width: 34px; height: 34px; }
+  .nav-title { font-size: 11px; }
+  .nav-cta { padding: 7px 13px; font-size: 12px; }
+
+  .hero { padding: 68px 14px 32px; gap: 20px; }
+  .hero-image-wrap { max-width: 220px; }
+  .hero-title { font-size: clamp(28px, 9vw, 44px); }
+  .hero-badge { font-size: 10px; padding: 5px 10px; }
+  .hero-desc { font-size: 13px; }
+  .btn-lg { padding: 13px 20px; font-size: 14px; }
+
+  .features { padding: 40px 14px; }
+  .feature-card { padding: 16px; }
+  .cta-section { padding: 40px 14px; }
+  .cta-content h2 { font-size: clamp(22px, 8vw, 34px); }
+  .cta-content p { font-size: 14px; }
 }
 </style>

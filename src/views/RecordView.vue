@@ -89,28 +89,10 @@
           <tbody>
             <tr v-for="(day, idx) in record?.days" :key="idx" :class="{today: isToday(day.day), locked: !canEdit(day.day)}">
               <td class="td-date">{{ day.day }}</td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'mopFloor')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.mopFloor" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'mopFloor')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.mopFloor" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanLavatory')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanLavatory" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanLavatory')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanLavatory" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanWaterCloset')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanWaterCloset" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanWaterCloset')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanWaterCloset" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanWallTiles')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanWallTiles" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanWallTiles')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanWallTiles" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanUrinals')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanUrinals" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanUrinals')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanUrinals" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'sprayAir')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.sprayAir" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'sprayAir')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.sprayAir" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'disposeGarbage')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.disposeGarbage" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'disposeGarbage')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.disposeGarbage" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanDustWindow')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanDustWindow" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanDustWindow')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanDustWindow" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'cleanMirror')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.cleanMirror" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'cleanMirror')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.cleanMirror" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'checkFloorDrain')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.checkFloorDrain" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'checkFloorDrain')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.checkFloorDrain" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'am', 'checkFaucet')" :class="{editable: canEdit(day.day)}"><span v-if="day.am.checkFaucet" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
-              <td><div class="cell-wrap" @click="toggle(idx, 'pm', 'checkFaucet')" :class="{editable: canEdit(day.day)}"><span v-if="day.pm.checkFaucet" class="check-mark">✓</span><span v-else-if="shouldShowX(day.day)" class="x-mark">✗</span></div></td>
+              <template v-for="field in taskFields" :key="field + '-am'">
+                <td><div class="cell-wrap" :class="{editable: canEdit(day.day)}" @click.stop="openPicker($event, idx, 'am', field, day.day)"><span v-if="cellVal(day.am[field]) === 'check'" class="check-mark">✓</span><span v-else-if="cellVal(day.am[field]) === 'x'" class="x-mark">✗</span></div></td>
+                <td><div class="cell-wrap" :class="{editable: canEdit(day.day)}" @click.stop="openPicker($event, idx, 'pm', field, day.day)"><span v-if="cellVal(day.pm[field]) === 'check'" class="check-mark">✓</span><span v-else-if="cellVal(day.pm[field]) === 'x'" class="x-mark">✗</span></div></td>
+              </template>
               <td class="td-remarks">
                 <input v-if="canEdit(day.day)" v-model="day.remarks" @change="saveRemarks(idx, day.remarks)" type="text" class="remarks-input" placeholder="..." />
                 <span v-else>{{ day.remarks }}</span>
@@ -130,19 +112,38 @@
       </div>
     </div>
 
+    <!-- Cell Picker Popup -->
+    <teleport to="body">
+      <div v-if="picker.visible" class="cell-picker" :style="{ top: picker.y + 'px', left: picker.x + 'px' }" @click.stop>
+        <button class="picker-btn picker-check" @click="pickValue('check')">
+          <span class="picker-icon">✓</span>
+          <span class="picker-label">Check</span>
+        </button>
+        <button class="picker-btn picker-x" @click="pickValue('x')">
+          <span class="picker-icon">✗</span>
+          <span class="picker-label">Not Done</span>
+        </button>
+        <button class="picker-btn picker-clear" @click="pickValue(null)">
+          <span class="picker-icon">—</span>
+          <span class="picker-label">Clear</span>
+        </button>
+      </div>
+      <div v-if="picker.visible" class="picker-backdrop" @click="closePicker"></div>
+    </teleport>
+
     <!-- Legend -->
     <div class="legend no-print">
-      <div class="legend-item"><div class="leg-check">✓</div> Completed</div>
-      <div class="legend-item"><div class="leg-x">✗</div> Not done (past/today)</div>
-      <div class="legend-item"><div class="leg-empty"></div> Future / N/A</div>
+      <div class="legend-item"><div class="leg-check">✓</div> Completed / Done</div>
+      <div class="legend-item"><div class="leg-x">✗</div> Not Done</div>
+      <div class="legend-item"><div class="leg-empty"></div> No entry</div>
       <div class="legend-item today-leg"><div class="leg-today"></div> Today (editable)</div>
-      <div class="legend-item"><div class="leg-locked"></div> Locked (past/future)</div>
+      <div class="legend-item"><div class="leg-locked"></div> Locked</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePmcStore } from '@/store/pmc'
 import { useAuthStore } from '@/store/auth'
@@ -162,6 +163,8 @@ const todayMonth = now.getMonth() + 1
 const todayYear = now.getFullYear()
 const record = computed(() => pmc.getRecord(route.params.id))
 
+const taskFields = ['mopFloor','cleanLavatory','cleanWaterCloset','cleanWallTiles','cleanUrinals','sprayAir','disposeGarbage','cleanDustWindow','cleanMirror','checkFloorDrain','checkFaucet']
+
 const printDate = computed(() => {
   const dd = String(now.getDate()).padStart(2, '0')
   const mm = String(now.getMonth() + 1).padStart(2, '0')
@@ -173,6 +176,50 @@ const hasEdits = ref(false)
 const savedMsg = ref(false)
 const hasSaved = ref(false)
 let savedTimer = null
+
+// Picker state
+const picker = ref({ visible: false, x: 0, y: 0, dayIdx: null, amPm: null, field: null })
+
+function cellVal(raw) {
+  // Support legacy boolean true → 'check'
+  if (raw === true) return 'check'
+  if (raw === 'check' || raw === 'x') return raw
+  return null
+}
+
+function openPicker(e, dayIdx, amPm, field, dayNum) {
+  if (!canEdit(dayNum)) return
+  const rect = e.currentTarget.getBoundingClientRect()
+  const popupW = 200
+  const popupH = 80
+  // Clamp x so popup never exits right edge
+  let x = rect.left + window.scrollX
+  if (x + popupW > window.innerWidth + window.scrollX - 8) {
+    x = window.innerWidth + window.scrollX - popupW - 8
+  }
+  // Clamp y so popup never exits bottom edge
+  let y = rect.bottom + window.scrollY + 4
+  if (y + popupH > window.innerHeight + window.scrollY - 8) {
+    y = rect.top + window.scrollY - popupH - 4
+  }
+  picker.value = { visible: true, x, y, dayIdx, amPm, field }
+}
+
+function pickValue(val) {
+  const { dayIdx, amPm, field } = picker.value
+  if (dayIdx === null) return
+  pmc.updateDay(route.params.id, dayIdx, amPm, field, val)
+  hasEdits.value = true
+  closePicker()
+}
+
+function closePicker() {
+  picker.value = { ...picker.value, visible: false }
+}
+
+function onKeydown(e) { if (e.key === 'Escape') closePicker() }
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
 function goBack() { router.push(auth.isAdmin ? '/admin' : '/inspector') }
 
@@ -186,22 +233,6 @@ function flashSaved() {
 
 function saveAll() { pmc.save(); flashSaved() }
 
-function shouldShowX(day) {
-  if (!record.value) return false
-  const recYear = record.value.year
-  const recMonth = record.value.month
-  if (recYear < todayYear) return true
-  if (recYear === todayYear && recMonth < todayMonth) return true
-  if (recYear === todayYear && recMonth === todayMonth) {
-    if (day < todayDate) return true
-    if (day === todayDate) {
-      if (auth.isAdmin) return true
-      return hasSaved.value
-    }
-  }
-  return false
-}
-
 function isToday(day) {
   return day === todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
 }
@@ -211,13 +242,6 @@ function canEdit(day) {
   if (auth.isAdmin) return false
   if (record.value.year !== todayYear || record.value.month !== todayMonth) return false
   return day === todayDate
-}
-
-function toggle(dayIdx, amPm, field) {
-  const day = record.value?.days[dayIdx]
-  if (!day || !canEdit(day.day)) return
-  pmc.updateDay(route.params.id, dayIdx, amPm, field, !day[amPm][field])
-  hasEdits.value = true
 }
 
 function saveRemarks(dayIdx, val) { pmc.updateDayRemarks(route.params.id, dayIdx, val); hasEdits.value = true }
@@ -537,6 +561,7 @@ tr.locked > td { background: #fafafa; }
   min-height: 20px;
   display: flex; align-items: center; justify-content: center;
   cursor: default;
+  touch-action: manipulation; /* removes 300ms tap delay on mobile */
 }
 .cell-wrap.editable { cursor: pointer; }
 .cell-wrap.editable:hover { background: rgba(0,192,75,0.1); }
@@ -586,20 +611,158 @@ tr.locked > td { background: #fafafa; }
    RESPONSIVE
    ══════════════════════════════════════ */
 @media (max-width: 768px) {
-  .top-bar { padding: 10px 14px; gap: 10px; }
-  .top-title { font-size: 13px; }
+  /* Top bar — compact, prevent overflow */
+  .top-bar {
+    padding: 10px 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .top-title {
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .top-month { display: none; }
-  .btn { font-size: 13px; padding: 9px 14px; }
-  .print-area { margin: 10px; padding: 14px; }
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .legend { flex-wrap: wrap; gap: 8px; padding: 10px 14px; margin: 0 10px 14px; font-size: 12px; }
-  .rec-info { gap: 12px; flex-wrap: wrap; }
-  .ri-value { min-width: 100px; }
+  .top-actions { gap: 6px; flex-shrink: 0; }
+  .top-actions .btn {
+    font-size: 12px;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+  .top-actions .saved-msg { font-size: 11px; padding: 5px 9px; }
+
+  /* Print area — tighter on mobile */
+  .print-area {
+    margin: 10px;
+    padding: 14px 12px;
+    border-radius: 8px;
+  }
+
+  /* Record info — stack vertically on mobile */
+  .rec-info {
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .ri-field { flex-wrap: wrap; gap: 4px; }
+  .ri-label { font-size: 11px; }
+  .ri-value {
+    font-size: 11px;
+    min-width: 0;
+    width: 100%;
+    flex: 1;
+  }
+  .ri-value--wide { min-width: 0; }
+
+  /* Print header images — smaller on mobile */
+  .header-img { max-height: 48px; }
+
+  /* Table — horizontal scroll with touch support */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Show scroll hint on mobile */
+    position: relative;
+  }
+
+  /* Legend — compact wrap */
+  .legend {
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 10px 12px;
+    margin: 0 10px 14px;
+    font-size: 11px;
+  }
+  .legend-item { gap: 6px; }
 }
 
-@media (max-width: 420px) {
+/* ── Very small mobile (≤480px) ── */
+@media (max-width: 480px) {
   .top-bar { padding: 8px 10px; }
-  .print-area { margin: 8px; padding: 10px; }
   .top-title { font-size: 12px; }
+  .top-actions .btn { font-size: 11px; padding: 7px 10px; }
+
+  /* Back button — icon only on tiny screens */
+  .top-bar > .btn:first-child span { display: none; }
+
+  .print-area { margin: 8px; padding: 10px; }
+  .legend { padding: 8px 10px; margin: 0 8px 10px; font-size: 10px; }
+  .legend-item { gap: 5px; }
 }
+
+/* ── Cell picker — center on mobile instead of anchoring to cell ── */
+@media (max-width: 600px) {
+  .cell-picker {
+    position: fixed !important;
+    /* Override the JS-positioned top/left with centered fixed position */
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9999;
+    /* Make it bigger and easier to tap */
+    padding: 12px;
+    gap: 8px;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  }
+  .picker-btn {
+    padding: 14px 20px;
+    min-width: 72px;
+    min-height: 72px; /* larger tap target */
+  }
+  .picker-icon { font-size: 24px; }
+  .picker-label { font-size: 9px; }
+}
+
+/* ══════════════════════════════════════
+   CELL PICKER POPUP
+   ══════════════════════════════════════ */
+.picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: transparent;
+}
+.cell-picker {
+  position: absolute;
+  z-index: 9999;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--gray-200);
+  animation: fadeUp 0.15s ease;
+}
+.picker-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: var(--font-body);
+  min-width: 60px;
+}
+.picker-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.picker-icon { font-size: 20px; font-weight: 700; line-height: 1; }
+.picker-label { font-size: 10px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.4px; }
+.picker-check { border-color: #bbf7d0; background: #f0fdf4; }
+.picker-check:hover { background: #dcfce7; border-color: #4ade80; }
+.picker-check .picker-icon { color: var(--green-forest); }
+.picker-x { border-color: #fecaca; background: #fff5f5; }
+.picker-x:hover { background: #fee2e2; border-color: #f87171; }
+.picker-x .picker-icon { color: #dc2626; }
+.picker-clear { border-color: var(--gray-300); }
+.picker-clear:hover { background: var(--gray-200); }
+.picker-clear .picker-icon { color: var(--gray-500); font-size: 16px; }
+
 </style>

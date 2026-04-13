@@ -1,6 +1,53 @@
 <template>
   <div class="dashboard">
-    <!-- Sidebar -->
+    <!-- Mobile overlay -->
+    <div class="mobile-overlay" v-if="mobileNavOpen" @click="mobileNavOpen = false"></div>
+
+    <!-- Mobile Top Bar -->
+    <header class="mobile-topbar">
+      <div class="mobile-topbar-left">
+        <img src="@/assets/pmclogo.png" alt="GSO PMC Logo" class="mobile-logo" />
+        <div class="mobile-brand">
+          <div class="mb-title">PMC SYSTEM</div>
+          <div class="mb-sub">Inspector Panel</div>
+        </div>
+      </div>
+      <button class="hamburger-btn" @click="mobileNavOpen = !mobileNavOpen" :aria-expanded="mobileNavOpen">
+        <span class="ham-line" :class="{open: mobileNavOpen}"></span>
+        <span class="ham-line" :class="{open: mobileNavOpen}"></span>
+        <span class="ham-line" :class="{open: mobileNavOpen}"></span>
+      </button>
+    </header>
+
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-drawer" :class="{open: mobileNavOpen}">
+      <div class="drawer-user">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ auth.currentUser?.name }}</div>
+          <div class="user-role">Inspector</div>
+        </div>
+      </div>
+      <nav class="drawer-nav">
+        <button class="drawer-item" :class="{active: activeTab === 'new'}" @click="navTo('new')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Record
+        </button>
+        <button class="drawer-item" :class="{active: activeTab === 'history'}" @click="navTo('history')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          History
+          <span class="drawer-badge" v-if="myRecords.length">{{ myRecords.length }}</span>
+        </button>
+      </nav>
+      <div class="drawer-footer">
+        <button class="logout-btn" @click="doLogout">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Sidebar -->
     <aside class="sidebar" :class="{collapsed: sidebarCollapsed}">
       <div class="sidebar-header">
         <img v-if="!sidebarCollapsed" src="@/assets/pmclogo.png" alt="GSO PMC Logo" class="sidebar-logo-img" />
@@ -72,16 +119,22 @@
           <div v-if="createMsg" class="alert" :class="createMsg.type === 'success' ? 'alert-success' : 'alert-error'">{{ createMsg.text }}</div>
           <div class="form-grid">
             <div class="form-group">
-              <label class="form-label">Janitor Name</label>
-              <input v-model="newRec.janitorName" type="text" class="form-control" placeholder="Enter janitor's full name" />
-            </div>
-            <div class="form-group">
               <label class="form-label">Building Name</label>
               <input v-model="newRec.buildingName" type="text" class="form-control" placeholder="e.g. Admin Building" />
             </div>
             <div class="form-group">
+              <label class="form-label">Janitor Name</label>
+              <input v-model="newRec.janitorName" type="text" class="form-control" placeholder="Enter janitor's full name" />
+            </div>
+            <div class="form-group">
               <label class="form-label">Assigned Utility Personnel</label>
-              <input v-model="newRec.assignedPersonnel" type="text" class="form-control" placeholder="Personnel name" />
+              <div class="autofill-field">
+                <input v-model="newRec.assignedPersonnel" type="text" class="form-control" readonly />
+                <span class="autofill-badge">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                  
+                </span>
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Month</label>
@@ -114,8 +167,8 @@
           <div class="records-grid">
             <div class="record-card" v-for="rec in myRecords.slice().reverse().slice(0,6)" :key="rec.id" @click="openRecord(rec.id)">
               <div class="rc-month-badge">{{ months[rec.month - 1] }} {{ rec.year }}</div>
-              <div class="rc-janitor">{{ rec.janitorName }}</div>
-              <div class="rc-building">{{ rec.buildingName }}</div>
+              <div class="rc-janitor">{{ rec.buildingName }}</div>
+              <div class="rc-building">{{ rec.janitorName }}</div>
               <div class="rc-progress">
                 <div class="rc-prog-bar">
                   <div class="rc-prog-fill" :style="`width:${recordProgress(rec)}%`"></div>
@@ -132,7 +185,7 @@
       <div v-if="activeTab === 'history'" class="tab-content">
         <div class="history-filters card" style="margin-bottom:20px">
           <div class="filter-row">
-            <input v-model="searchQ" type="text" class="form-control" placeholder="Search by janitor name..." style="max-width:300px" />
+            <input v-model="searchQ" type="text" class="form-control" placeholder="Search by building name..." style="max-width:300px" />
             <select v-model="filterMonth" class="form-control" style="max-width:160px">
               <option value="">All Months</option>
               <option v-for="(m, i) in months" :key="i" :value="i+1">{{ m }}</option>
@@ -150,8 +203,8 @@
           <div class="history-card" v-for="rec in filteredRecords" :key="rec.id">
             <div class="hc-left">
               <div class="hc-month">{{ months[rec.month-1] }} {{ rec.year }}</div>
-              <div class="hc-janitor">{{ rec.janitorName }}</div>
-              <div class="hc-details">{{ rec.buildingName }} · {{ rec.assignedPersonnel }}</div>
+              <div class="hc-janitor">{{ rec.buildingName }}</div>
+              <div class="hc-details">{{ rec.janitorName }} · {{ rec.assignedPersonnel }}</div>
             </div>
             <div class="hc-right">
               <div class="hc-progress">
@@ -191,6 +244,12 @@ const activeTab = ref('new')
 const searchQ = ref('')
 const filterMonth = ref('')
 const createMsg = ref(null)
+const mobileNavOpen = ref(false)
+
+function navTo(tab) {
+  activeTab.value = tab
+  mobileNavOpen.value = false
+}
 
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const now = new Date()
@@ -203,7 +262,7 @@ const userInitials = computed(() => {
 const newRec = ref({
   janitorName: '',
   buildingName: '',
-  assignedPersonnel: '',
+  assignedPersonnel: auth.currentUser?.name || '',
   month: now.getMonth() + 1,
   year: now.getFullYear(),
 })
@@ -212,7 +271,13 @@ const myRecords = computed(() => pmc.getByInspector(auth.currentUser?.id))
 
 const filteredRecords = computed(() => {
   let r = myRecords.value
-  if (searchQ.value) r = r.filter(x => x.janitorName.toLowerCase().includes(searchQ.value.toLowerCase()))
+  if (searchQ.value) {
+    const q = searchQ.value.toLowerCase()
+    r = r.filter(x =>
+      x.buildingName?.toLowerCase().includes(q) ||
+      x.janitorName?.toLowerCase().includes(q)
+    )
+  }
   if (filterMonth.value) r = r.filter(x => x.month === Number(filterMonth.value))
   return r.slice().reverse()
 })
@@ -235,9 +300,8 @@ function recordProgress(rec) {
 
 function createRecord() {
   createMsg.value = null
-  if (!newRec.value.janitorName.trim()) { createMsg.value = { type:'error', text:'Please enter janitor name.' }; return }
   if (!newRec.value.buildingName.trim()) { createMsg.value = { type:'error', text:'Please enter building name.' }; return }
-  if (!newRec.value.assignedPersonnel.trim()) { createMsg.value = { type:'error', text:'Please enter assigned personnel.' }; return }
+  if (!newRec.value.janitorName.trim()) { createMsg.value = { type:'error', text:'Please enter janitor name.' }; return }
   
   const id = pmc.createRecord({
     inspectorId: auth.currentUser?.id,
@@ -248,8 +312,8 @@ function createRecord() {
     month: newRec.value.month,
     year: newRec.value.year,
   })
-  createMsg.value = { type:'success', text:`Record created for ${newRec.value.janitorName}!` }
-  newRec.value = { janitorName:'', buildingName:'', assignedPersonnel:'', month: now.getMonth()+1, year: now.getFullYear() }
+  createMsg.value = { type:'success', text:`Record created for ${newRec.value.buildingName}!` }
+  newRec.value = { janitorName:'', buildingName:'', assignedPersonnel: auth.currentUser?.name || '', month: now.getMonth()+1, year: now.getFullYear() }
   setTimeout(() => router.push(`/inspector/record/${id}`), 800)
 }
 
@@ -275,7 +339,8 @@ function doLogout() {
 
 * { font-family: 'Poppins', sans-serif !important; }
 
-.dashboard { display: flex; min-height: 100vh; background: #f5f5f0; }
+.dashboard { display: flex; min-height: 100vh; background: #f5f5f0; overflow-x: hidden; }
+:global(html), :global(body) { overflow-x: hidden; max-width: 100%; }
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -532,6 +597,17 @@ tr:hover td { background: #f0f5f0 !important; }
 .rc-progress span { font-size: 11px; color: #aaa; white-space: nowrap; }
 .rc-arrow { position: absolute; top: 18px; right: 18px; color: #009900; font-size: 16px; }
 
+.autofill-field { position: relative; }
+.autofill-field .form-control { background: #f0fdf4; border-color: #bbf7d0; color: #166534; font-weight: 600; cursor: default; }
+.autofill-badge {
+  position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #dcfce7; color: #166534;
+  font-size: 10px; font-weight: 700; padding: 2px 8px;
+  border-radius: 99px; pointer-events: none;
+  letter-spacing: 0.3px;
+}
+
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px; }
 .new-record-form { margin-bottom: 28px; }
 
@@ -575,91 +651,130 @@ tr:hover td { background: #f0f5f0 !important; }
   .records-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 }
 
-/* Mobile (≤768px): sidebar becomes bottom nav, full-width content */
+/* ── Mobile Top Bar & Hamburger ── */
+.mobile-topbar { display: none; }
+.mobile-overlay { display: none; }
+.mobile-drawer { display: none; }
+
+/* Mobile (≤768px) */
+/* Mobile (≤768px) */
 @media (max-width: 768px) {
-  .dashboard { flex-direction: column; min-height: 100svh; }
+  /* Hide desktop sidebar */
+  .sidebar { display: none !important; }
+  .dashboard { flex-direction: column; min-height: 100svh; overflow-x: hidden; }
 
-  /* Sidebar becomes top bar on mobile */
-  .sidebar {
-    width: 100% !important;
-    height: auto !important;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    flex-direction: row;
-    overflow: visible;
+  /* Sticky top bar */
+  .mobile-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200; background: #003300;
+    padding: 0 16px; height: 58px; flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
   }
-  .sidebar::before { width: 100%; height: 3px; display: block; }
-
-  /* Hide sidebar-header branding on mobile, show only hamburger area */
-  .sidebar-header {
-    flex-direction: row;
-    padding: 10px 14px;
-    border-bottom: none;
-    border-right: 1px solid rgba(255,255,255,0.07);
-    width: auto;
-    flex-shrink: 0;
+  .mobile-topbar::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #f9dc07, #ff9900, #f9dc07);
   }
-  .sidebar-logo-img { width: 46px; height: 46px; }
-  .sidebar-brand .sb-title { font-size: 13px; }
-  .sidebar-brand .sb-sub { font-size: 10px; }
+  .mobile-topbar-left { display: flex; align-items: center; gap: 10px; }
+  .mobile-logo { width: 36px; height: 36px; object-fit: contain; }
+  .mobile-brand .mb-title { font-size: 13px; font-weight: 800; color: #f9dc07; letter-spacing: 0.5px; line-height: 1.1; }
+  .mobile-brand .mb-sub { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.3px; }
 
-  .sidebar-user { display: none; }
-
-  /* Nav becomes horizontal row */
-  .sidebar-nav {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    padding: 8px 10px;
-    gap: 6px;
-    overflow-x: auto;
-    overflow-y: visible;
-    align-items: center;
+  .hamburger-btn {
+    background: transparent; border: none; cursor: pointer;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 5px; width: 42px; height: 42px; border-radius: 8px; transition: background 0.2s;
+    padding: 0; flex-shrink: 0;
   }
-  .nav-section-title { display: none; }
-  .nav-item {
-    flex-shrink: 0;
-    white-space: nowrap;
-    padding: 8px 14px;
-    font-size: 12px;
-    margin-bottom: 0;
+  .hamburger-btn:hover { background: rgba(255,255,255,0.08); }
+  .ham-line {
+    display: block; width: 22px; height: 2.5px; background: #f9dc07;
+    border-radius: 2px; transition: all 0.3s ease; transform-origin: center;
   }
-  .collapse-btn { display: none; }
-  .sidebar-footer { display: none; }
+  .ham-line.open:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+  .ham-line.open:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .ham-line.open:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
 
-  /* Main content full width */
-  .main-content { width: 100%; overflow-y: auto; }
+  .mobile-overlay {
+    display: block; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 150; animation: fadeIn 0.2s ease;
+  }
+  .mobile-drawer {
+    display: flex; flex-direction: column;
+    position: fixed; top: 58px; left: 0; right: 0; z-index: 160; background: #003300;
+    transform: translateY(-110%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35); border-bottom: 3px solid #f9dc07;
+    max-height: calc(100svh - 58px); overflow-y: auto;
+  }
+  .mobile-drawer.open { transform: translateY(0); }
+  .drawer-user { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .drawer-nav { display: flex; flex-direction: column; padding: 10px 12px; gap: 4px; }
+  .drawer-item {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    border: none; background: transparent; color: rgba(255,255,255,0.75);
+    border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: left; width: 100%;
+  }
+  .drawer-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .drawer-item.active { background: linear-gradient(135deg, #f9dc07, #ff9900); color: #003300; font-weight: 700; }
+  .drawer-badge { margin-left: auto; background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .drawer-item.active .drawer-badge { background: rgba(0,51,0,0.2); color: #003300; }
+  .drawer-footer { padding: 12px 20px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
 
-  /* Hero banner text smaller */
-  .pmc-hero-title { font-size: clamp(11px, 3.5vw, 18px); letter-spacing: 1px; }
-  .pmc-hero-sub { font-size: clamp(8px, 2vw, 11px); }
+  /* No horizontal scroll on main */
+  .main-content { width: 100%; max-width: 100vw; overflow-x: hidden; overflow-y: visible; }
 
-  .content-header { padding: 14px 16px 0; margin-bottom: 12px; }
-  .content-title { font-size: 18px; }
-  .tab-content { padding: 0 14px 20px; }
+  /* Hero */
+  .pmc-hero { padding-top: 38%; background-size: cover !important; }
+  .pmc-hero-title { font-size: clamp(9px, 3.5vw, 15px); letter-spacing: 1px; }
+  .pmc-hero-sub { font-size: clamp(7px, 2.2vw, 10px); margin-top: 3px; }
 
-  .card { padding: 16px; }
-  .card-title { font-size: 15px; }
+  /* Content header */
+  .content-header { padding: 14px 12px 0; margin-bottom: 10px; flex-wrap: wrap; gap: 4px; }
+  .content-title { font-size: 17px; }
+  .header-actions { gap: 6px; }
 
+  /* Tab */
+  .tab-content { padding: 0 12px 24px; }
+
+  /* Cards */
+  .card { padding: 14px; border-radius: 12px; overflow-wrap: break-word; word-break: break-word; }
+  .card-title { font-size: 14px; }
+  .card-sub { font-size: 12px; margin-bottom: 14px; }
+
+  /* Forms */
   .form-grid { grid-template-columns: 1fr; gap: 12px; }
-  .records-grid { grid-template-columns: 1fr; }
+  .form-control { font-size: 14px; padding: 11px 13px; }
 
+  /* Record cards */
+  .records-grid { grid-template-columns: 1fr; gap: 10px; }
+  .record-card { padding: 14px; }
+
+  /* History filters */
+  .history-filters { margin-bottom: 14px; }
   .history-filters .filter-row { flex-direction: column; gap: 10px; }
-  .history-filters .form-control { max-width: 100% !important; }
+  .history-filters .form-control { max-width: 100% !important; width: 100%; }
 
-  .hc-right { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .hc-bar { width: 100%; }
-  .hc-actions { align-self: flex-end; }
+  /* History cards */
+  .history-card { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+  .hc-right { width: 100%; justify-content: space-between; align-items: center; flex-direction: row; gap: 10px; }
+  .hc-bar { flex: 1; width: auto; min-width: 60px; }
+  .hc-progress { flex: 1; gap: 8px; }
+  .hc-actions { flex-shrink: 0; }
+  .hc-janitor { font-size: 14px; }
 
-  .legend { flex-wrap: wrap; gap: 10px; padding: 10px 14px; margin: 0 14px 14px; }
+  /* Legend */
+  .legend { flex-wrap: wrap; gap: 8px; padding: 10px 12px; margin: 0 0 12px; }
+
+  /* Buttons */
+  .btn { font-size: 12px; padding: 8px 14px; }
 }
 
 /* Small mobile (≤420px) */
 @media (max-width: 420px) {
-  .content-title { font-size: 16px; }
-  .tab-content { padding: 0 10px 16px; }
-  .card { padding: 14px; }
-  .btn { font-size: 13px; padding: 10px 18px; }
+  .tab-content { padding: 0 10px 20px; }
+  .content-header { padding: 12px 10px 0; }
+  .content-title { font-size: 15px; }
+  .card { padding: 12px; }
+  .btn { font-size: 12px; padding: 8px 12px; }
 }
 </style>

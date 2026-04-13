@@ -1,6 +1,6 @@
 <template>
   <div class="auth-page">
-    <div class="auth-left">
+    <div class="auth-left" :style="`--bg-img: url('${libSketch}')`">
       <div class="auth-left-inner">
         <router-link to="/" class="back-link">
           <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -8,11 +8,7 @@
         </router-link>
         <div class="brand">
           <div class="brand-logo">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M16 2L4 8v8c0 7.73 5.15 14.97 12 17 6.85-2.03 12-9.27 12-17V8L16 2z" fill="rgba(0,192,75,0.2)"/>
-              <path d="M16 2L4 8v8c0 7.73 5.15 14.97 12 17 6.85-2.03 12-9.27 12-17V8L16 2z" stroke="#00c04b" stroke-width="2" fill="none"/>
-              <path d="M11 16l3 3 7-7" stroke="#00c04b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img :src="pmcLogo" alt="PMC Logo" class="brand-logo-img" />
           </div>
           <div>
             <div class="brand-name">CSU PMC System</div>
@@ -20,17 +16,7 @@
           </div>
         </div>
         <div class="auth-illustration">
-          <div class="ill-orb orb-a"></div>
-          <div class="ill-orb orb-b"></div>
-          <div class="ill-card">
-            <div class="ic-title">Daily Maintenance</div>
-            <div class="ic-items">
-              <div class="ic-row" v-for="(item, i) in checkItems" :key="i">
-                <div class="ic-check" :class="{done: i < 3}">{{ i < 3 ? '✓' : '' }}</div>
-                <span :class="{done: i < 3}">{{ item }}</span>
-              </div>
-            </div>
-          </div>
+          <img :src="pmcLogo" alt="PMC Logo" class="auth-pmc-logo" />
         </div>
         <div class="auth-quote">
           "Competence · Service · Uprightness"
@@ -99,12 +85,22 @@
             <label class="form-label">I am a...</label>
             <div class="role-cards">
               <div class="role-card" :class="{active: regData.role === 'inspector'}" @click="regData.role = 'inspector'">
-                <div class="rc-icon">🔍</div>
+                <div class="rc-icon">
+                  <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="7" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M16.5 16.5L21 21" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M11 8v3m0 0v3m0-3h3m-3 0H8" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
                 <div class="rc-title">Inspector</div>
                 <div class="rc-desc">Record & manage checklists</div>
               </div>
               <div class="role-card" :class="{active: regData.role === 'admin'}" @click="regData.role = 'admin'">
-                <div class="rc-icon">👑</div>
+                <div class="rc-icon">
+                  <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                </div>
                 <div class="rc-title">Admin</div>
                 <div class="rc-desc">View reports & manage users</div>
               </div>
@@ -145,6 +141,8 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
+import pmcLogo from '@/assets/pmclogo.png'
+import libSketch from '@/assets/libsketch.png'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -232,6 +230,16 @@ async function doRegister() {
   display: flex;
   align-items: center;
 }
+.auth-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--bg-img);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: 0;
+}
 .auth-left-inner {
   padding: 40px;
   position: relative;
@@ -252,46 +260,32 @@ async function doRegister() {
 .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
 .brand-logo {
   width: 52px; height: 52px;
-  background: rgba(0,192,75,0.15);
-  border: 1px solid rgba(0,192,75,0.25);
-  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
+}
+.brand-logo-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
 }
 .brand-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: white; }
 .brand-sub { font-size: 12px; color: rgba(255,255,255,0.45); }
 
-.auth-illustration { position: relative; height: 260px; margin: 32px 0; }
-.ill-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40px);
+.auth-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 32px 0;
+  padding: 0 10px;
 }
-.orb-a { width: 200px; height: 200px; background: rgba(0,192,75,0.2); top: 0; right: 0; }
-.orb-b { width: 150px; height: 150px; background: rgba(112,194,71,0.15); bottom: 0; left: 0; }
-
-.ill-card {
-  position: absolute;
-  top: 20px; left: 20px; right: 20px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  backdrop-filter: blur(10px);
+.auth-pmc-logo {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  object-fit: contain;
+  display: block;
   animation: float 6s ease-in-out infinite;
+  filter: drop-shadow(0 16px 40px rgba(0, 192, 75, 0.3));
 }
-.ic-title { color: white; font-weight: 600; margin-bottom: 14px; font-size: 14px; }
-.ic-items { display: flex; flex-direction: column; gap: 8px; }
-.ic-row { display: flex; align-items: center; gap: 10px; }
-.ic-check {
-  width: 20px; height: 20px;
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; color: white; flex-shrink: 0;
-}
-.ic-check.done { background: var(--green-primary); border-color: var(--green-primary); }
-.ic-row span { font-size: 13px; color: rgba(255,255,255,0.5); }
-.ic-row span.done { color: rgba(255,255,255,0.9); text-decoration: line-through; }
 
 .auth-quote {
   color: rgba(255,255,255,0.55);
@@ -372,7 +366,26 @@ async function doRegister() {
   border-color: var(--green-primary);
   background: var(--green-pale);
 }
-.rc-icon { font-size: 24px; margin-bottom: 8px; }
+.rc-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+  color: var(--gray-500);
+  margin: 0 auto 10px;
+  transition: all 0.2s;
+}
+.role-card:hover .rc-icon {
+  background: var(--green-pale);
+  color: var(--green-forest);
+}
+.role-card.active .rc-icon {
+  background: var(--green-primary);
+  color: white;
+}
 .rc-title { font-weight: 700; font-size: 14px; color: var(--gray-800); }
 .rc-desc { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
 

@@ -1,6 +1,57 @@
 <template>
   <div class="dashboard">
-    <!-- Sidebar -->
+    <!-- Mobile overlay -->
+    <div class="mobile-overlay" v-if="mobileNavOpen" @click="mobileNavOpen = false"></div>
+
+    <!-- Mobile Top Bar (hamburger) -->
+    <header class="mobile-topbar">
+      <div class="mobile-topbar-left">
+        <img src="@/assets/pmclogo.png" alt="GSO PMC Logo" class="mobile-logo" />
+        <div class="mobile-brand">
+          <div class="mb-title">PMC SYSTEM</div>
+          <div class="mb-sub">Admin Panel</div>
+        </div>
+      </div>
+      <button class="hamburger-btn" @click="mobileNavOpen = !mobileNavOpen" :aria-expanded="mobileNavOpen">
+        <span class="ham-line" :class="{open: mobileNavOpen}"></span>
+        <span class="ham-line" :class="{open: mobileNavOpen}"></span>
+        <span class="ham-line" :class="{open: mobileNavOpen}"></span>
+      </button>
+    </header>
+
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-drawer" :class="{open: mobileNavOpen}">
+      <div class="drawer-user">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ auth.currentUser?.name }}</div>
+          <div class="user-role">Admin</div>
+        </div>
+      </div>
+      <nav class="drawer-nav">
+        <button class="drawer-item" :class="{active: activeTab === 'analytics'}" @click="navTo('analytics')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          All Records
+        </button>
+        <button class="drawer-item" :class="{active: activeTab === 'inspectors'}" @click="navTo('inspectors')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Inspectors
+          <span class="drawer-badge">{{ inspectors.length }}</span>
+        </button>
+        <button class="drawer-item" :class="{active: activeTab === 'logs'}" @click="navTo('logs')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Activity Logs
+        </button>
+      </nav>
+      <div class="drawer-footer">
+        <button class="logout-btn" @click="doLogout">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <img src="@/assets/pmclogo.png" alt="GSO PMC Logo" class="sidebar-logo-img" />
@@ -13,7 +64,7 @@
         <div class="user-avatar">{{ userInitials }}</div>
         <div class="user-info">
           <div class="user-name">{{ auth.currentUser?.name }}</div>
-          <div class="user-role" >Admin</div>
+          <div class="user-role">Admin</div>
         </div>
       </div>
       <nav class="sidebar-nav">
@@ -112,7 +163,7 @@
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" stroke-linecap="round"/></svg>
                 Search
               </label>
-              <input v-model="searchQ" type="text" class="form-control af-input" placeholder="Search janitor, inspector, building..." />
+              <input v-model="searchQ" type="text" class="form-control af-input" placeholder="Search building, janitor, inspector..." />
             </div>
             <div class="af-group">
               <label class="af-label">
@@ -209,8 +260,8 @@
               <div class="rec-row" v-for="rec in filteredRecords" :key="rec.id">
                 <div class="rr-left">
                   <div class="rr-month">{{ months[rec.month-1] }} {{ rec.year }}</div>
-                  <div class="rr-janitor">{{ rec.janitorName }}</div>
-                  <div class="rr-detail">{{ rec.buildingName }} · {{ rec.inspectorName }}</div>
+                  <div class="rr-janitor">{{ rec.buildingName }}</div>
+                  <div class="rr-detail">{{ rec.janitorName }} · {{ rec.inspectorName }}</div>
                 </div>
                 <div class="rr-right">
                   <div class="rr-prog">
@@ -315,6 +366,12 @@ const activeTab = ref('analytics')
 const searchQ = ref('')
 const filterMonth = ref('')
 const filterYear = ref('')
+const mobileNavOpen = ref(false)
+
+function navTo(tab) {
+  activeTab.value = tab
+  mobileNavOpen.value = false
+}
 
 const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -456,7 +513,10 @@ function doLogout() {
 * { font-family: 'Poppins', sans-serif !important; }
 
 /* Dashboard layout */
-.dashboard { display: flex; min-height: 100vh; background: #f5f5f0; }
+.dashboard { display: flex; min-height: 100vh; background: #f5f5f0; overflow-x: hidden; }
+
+/* Prevent body-level horizontal scroll */
+:global(html), :global(body) { overflow-x: hidden; max-width: 100%; }
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -860,6 +920,11 @@ tr:hover td { background: #f0f5f0 !important; }
    RESPONSIVE — Tablet & Mobile
    ══════════════════════════════════════ */
 
+/* ─── prevent any horizontal overflow globally ─── */
+html, body { overflow-x: hidden; max-width: 100%; }
+.dashboard { overflow-x: hidden; }
+.main-content { overflow-x: hidden; min-width: 0; }
+
 @media (max-width: 1024px) {
   .sidebar { width: 220px; }
   .analytics-bottom { grid-template-columns: 1fr; }
@@ -867,92 +932,271 @@ tr:hover td { background: #f0f5f0 !important; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ── Mobile Top Bar & Hamburger ── */
+.mobile-topbar {
+  display: none;
+}
+.mobile-overlay {
+  display: none;
+}
+.mobile-drawer {
+  display: none;
+}
+
 @media (max-width: 768px) {
+  /* Hide desktop sidebar entirely */
+  .sidebar { display: none !important; }
+
   .dashboard { flex-direction: column; min-height: 100svh; }
 
-  /* Sidebar → sticky top bar */
-  .sidebar {
-    width: 100% !important;
-    height: auto !important;
+  /* Sticky top bar */
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     position: sticky;
     top: 0;
-    z-index: 100;
-    flex-direction: row;
-    overflow: visible;
-  }
-  .sidebar::before { width: 100%; height: 3px; display: block; }
-
-  .sidebar-header {
-    flex-direction: row;
-    padding: 10px 14px;
-    border-bottom: none;
-    border-right: 1px solid rgba(255,255,255,0.07);
-    width: auto;
+    z-index: 200;
+    background: #003300;
+    padding: 0 16px;
+    height: 58px;
     flex-shrink: 0;
-    gap: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
   }
-  .sidebar-logo-img { width: 46px; height: 46px; }
-  .sidebar-brand .sb-title { font-size: 13px; }
-  .sidebar-brand .sb-sub { font-size: 10px; }
-
-  .sidebar-user { display: none; }
-
-  .sidebar-nav {
-    flex: 1;
+  .mobile-topbar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f9dc07, #ff9900, #f9dc07);
+  }
+  .mobile-topbar-left {
     display: flex;
-    flex-direction: row;
-    padding: 8px 10px;
-    gap: 6px;
-    overflow-x: auto;
-    overflow-y: visible;
     align-items: center;
+    gap: 10px;
   }
-  .nav-section-title { display: none; }
-  .nav-item {
+  .mobile-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
+  .mobile-brand .mb-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #f9dc07;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+  }
+  .mobile-brand .mb-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.3px;
+  }
+
+  /* Hamburger button */
+  .hamburger-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    padding: 0;
     flex-shrink: 0;
-    white-space: nowrap;
-    padding: 8px 14px;
-    font-size: 12px;
-    margin-bottom: 0;
   }
-  .sidebar-footer { display: none; }
+  .hamburger-btn:hover { background: rgba(255,255,255,0.08); }
+  .ham-line {
+    display: block;
+    width: 22px;
+    height: 2.5px;
+    background: #f9dc07;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+  }
+  .ham-line.open:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+  .ham-line.open:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .ham-line.open:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
 
-  .main-content { width: 100%; overflow-y: auto; }
+  /* Dark overlay */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 150;
+    animation: fadeIn 0.2s ease;
+  }
 
-  .pmc-hero-title { font-size: clamp(11px, 3.5vw, 18px); letter-spacing: 1px; }
-  .pmc-hero-sub { font-size: clamp(8px, 2vw, 11px); }
+  /* Slide-down drawer */
+  .mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 58px;
+    left: 0;
+    right: 0;
+    z-index: 160;
+    background: #003300;
+    transform: translateY(-110%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    border-bottom: 3px solid #f9dc07;
+    max-height: calc(100svh - 58px);
+    overflow-y: auto;
+  }
+  .mobile-drawer.open {
+    transform: translateY(0);
+  }
+  .drawer-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .drawer-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    gap: 4px;
+  }
+  .drawer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.75);
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+  }
+  .drawer-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .drawer-item.active {
+    background: linear-gradient(135deg, #f9dc07, #ff9900);
+    color: #003300;
+    font-weight: 700;
+  }
+  .drawer-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }
+  .drawer-item.active .drawer-badge {
+    background: rgba(0,51,0,0.2);
+    color: #003300;
+  }
+  .drawer-footer {
+    padding: 12px 20px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
 
-  .content-header { padding: 14px 16px 0; margin-bottom: 12px; }
-  .content-title { font-size: 18px; }
-  .tab-content { padding: 0 14px 20px; }
+  /* ── Main content — locked width, no side scroll ── */
+  .main-content {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
 
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .kpi-value { font-size: 22px; }
-  .kpi-card { padding: 14px; }
+  /* ── Hero banner ── */
+  .pmc-hero { padding-top: 38%; background-size: cover !important; }
+  .pmc-hero-title { font-size: clamp(9px, 3.5vw, 15px); letter-spacing: 1px; }
+  .pmc-hero-sub { font-size: clamp(7px, 2.2vw, 10px); margin-top: 3px; }
 
-  .analytics-filters { padding: 12px 14px; }
+  /* ── Content header ── */
+  .content-header { padding: 14px 12px 0; margin-bottom: 10px; flex-wrap: wrap; gap: 4px; }
+  .content-title { font-size: 17px; }
+  .content-sub { font-size: 11px; }
+
+  /* ── Tab content ── */
+  .tab-content { padding: 0 12px 24px; }
+
+  /* ── Cards ── */
+  .card { padding: 14px; border-radius: 12px; overflow-wrap: break-word; word-break: break-word; }
+  .card-title { font-size: 14px; }
+  .card-sub { font-size: 12px; margin-bottom: 14px; }
+
+  /* ── KPI grid — 2 per row, compact ── */
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .kpi-card { padding: 12px 10px; gap: 8px; align-items: flex-start; flex-direction: column; }
+  .kpi-icon { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; }
+  .kpi-value { font-size: 22px; line-height: 1; }
+  .kpi-label { font-size: 10px; margin-top: 2px; }
+  .kpi-trend { display: none; }
+
+  /* ── Filters ── */
+  .analytics-filters { padding: 12px; margin-bottom: 12px; }
   .af-row { flex-direction: column; gap: 10px; }
+  .af-group { width: 100%; }
   .af-input { max-width: 100% !important; width: 100%; }
 
-  .analytics-bottom { grid-template-columns: 1fr; gap: 14px; }
+  /* ── Bar chart ── */
+  .chart-card { margin-bottom: 12px; }
+  .bar-chart { height: 90px; gap: 2px; }
+  .bar-label { font-size: 7px; }
+  .chart-title { font-size: 13px; }
+  .chart-sub { font-size: 10px; }
+  .chart-legend { font-size: 9px; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 
-  .card { padding: 16px; }
-  .card-title { font-size: 15px; }
+  /* ── Analytics bottom — stack ── */
+  .analytics-bottom { grid-template-columns: 1fr; gap: 12px; }
 
-  .it-row { grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+  /* ── Records list ── */
+  .rec-list { max-height: none; }
+  .rec-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; }
+  .rr-right { width: 100%; justify-content: space-between; align-items: center; }
+  .rr-prog { flex: 1; }
+  .rr-bar { flex: 1; width: auto; min-width: 60px; }
+  .rr-month { font-size: 9px; }
+  .rr-janitor { font-size: 12px; }
+  .rr-detail { font-size: 10px; }
+
+  /* ── Inspector cards ── */
+  .insp-card { padding: 12px; }
+  .ic-meta { flex-direction: column; gap: 4px; font-size: 11px; }
+  .ic-name { font-size: 13px; }
+  .ic-email { font-size: 11px; }
+
+  /* ── Inspector table ── */
+  .it-row { grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; padding: 9px 10px; }
   .it-row .it-email { display: none; }
+  .it-row .it-time { display: none; }
 
-  .rec-row { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .rr-right { width: 100%; justify-content: space-between; }
-  .rr-bar { width: 100px; }
+  /* ── Activity log table — horizontal scroll inside the card only ── */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-wrap table { min-width: 400px; }
+  th { font-size: 9px !important; padding: 7px 10px !important; white-space: nowrap; }
+  td { font-size: 11px !important; padding: 7px 10px !important; white-space: nowrap; }
 
-  .insp-card .ic-meta { flex-wrap: wrap; gap: 10px; }
+  /* ── Buttons ── */
+  .btn { font-size: 12px; padding: 8px 14px; }
 }
 
 @media (max-width: 420px) {
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
-  .kpi-value { font-size: 20px; }
-  .content-title { font-size: 16px; }
-  .tab-content { padding: 0 10px 16px; }
+  .tab-content { padding: 0 10px 20px; }
+  .content-header { padding: 12px 10px 0; }
+  .kpi-grid { gap: 7px; }
+  .kpi-card { padding: 10px 8px; }
+  .kpi-value { font-size: 19px; }
+  .content-title { font-size: 15px; }
+  .card { padding: 12px; }
 }
 </style>
