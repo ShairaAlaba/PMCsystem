@@ -19,10 +19,7 @@
           <div class="nav-sub">General Services Office</div>
         </div>
       </div>
-      <router-link to="/auth" class="btn btn-primary nav-cta">
-        Sign In
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-      </router-link>
+      
     </nav>
 
     <!-- Hero Section -->
@@ -37,9 +34,7 @@
           <span class="title-accent">Maintenance</span><br>
           Checklist
         </h1>
-        <p class="hero-desc animate-fadeUp" style="animation-delay:0.3s">
-          A smart digital system for tracking and managing daily sanitation and maintenance activities across CSU facilities — accurately, reliably, and efficiently.
-        </p>
+       
         <div class="hero-actions animate-fadeUp" style="animation-delay:0.4s">
           <router-link to="/auth" class="btn btn-primary btn-lg">
             Get Started

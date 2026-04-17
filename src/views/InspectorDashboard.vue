@@ -120,7 +120,20 @@
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">Building Name</label>
-              <input v-model="newRec.buildingName" type="text" class="form-control" placeholder="e.g. Admin Building" />
+              <select v-if="!showAddBuilding" v-model="selectedBuilding" class="form-control" @change="onBuildingSelect">
+                <option value="" disabled>— Select a building —</option>
+                <option v-for="b in allBuildings" :key="b" :value="b">{{ b }}</option>
+                <option value="__add_new__">➕ Add New Building...</option>
+              </select>
+              <div v-if="showAddBuilding" class="new-building-row">
+                <input v-model="newBuildingInput" type="text" class="form-control" placeholder="Type new building name..." @keyup.enter="confirmNewBuilding" />
+                <button type="button" class="btn btn-primary" style="padding:10px 14px;white-space:nowrap;" @click="confirmNewBuilding">Save</button>
+                <button type="button" class="btn btn-ghost" style="padding:10px 10px;" @click="cancelNewBuilding">✕</button>
+              </div>
+              <div v-if="newRec.buildingName && !showAddBuilding" class="selected-building-tag">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                {{ newRec.buildingName }}
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Janitor Name</label>
@@ -221,11 +234,59 @@
                   <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
               </div>
+              <button class="btn btn-add-month" @click.stop="openAddMonth(rec)">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                New Month
+              </button>
             </div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Add New Month Modal -->
+    <div v-if="addMonthModal.show" class="modal-backdrop" @click.self="addMonthModal.show = false">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title">Add New Month</div>
+          <button class="modal-close" @click="addMonthModal.show = false">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-rec-info">
+            <div class="modal-building">{{ addMonthModal.buildingName }}</div>
+            <div class="modal-janitor">{{ addMonthModal.janitorName }}</div>
+          </div>
+          <div v-if="addMonthModal.msg" class="alert" :class="addMonthModal.msg.type === 'error' ? 'alert-error' : 'alert-success'" style="margin-bottom:12px">{{ addMonthModal.msg.text }}</div>
+          <div class="modal-fields">
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Month</label>
+              <select v-model="addMonthModal.month" class="form-control">
+                <option v-for="(m, i) in months" :key="i" :value="i+1">{{ m }}</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Year</label>
+              <div class="year-stepper">
+                <button type="button" class="year-btn" @click="addMonthModal.year--">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <span class="year-display">{{ addMonthModal.year }}</span>
+                <button type="button" class="year-btn" @click="addMonthModal.year++">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" @click="addMonthModal.show = false">Cancel</button>
+          <button class="btn btn-primary" @click="confirmAddMonth">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Create Record
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -258,6 +319,64 @@ const userInitials = computed(() => {
   const name = auth.currentUser?.name || ''
   return name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()
 })
+
+// ── Building Name Dropdown ──────────────────────────────────────
+const DEFAULT_BUILDINGS = [
+  'AGRO-FORESTRY SHED','AGRO-WORKSHOP/TESDA','ALUMNI OFFICE','AMANTE BUILDING',
+  'ANNEX 2 (OLD LADIES DORM)','ANNEX 3','BARN HOUSE','BATOK HALL',
+  'BEEF CATTLE BUILDING','BOOKSTORE AND ORGMS OFFICE','CAA CANTEEN',
+  'CAA SWINE LABORATORY','CARAGA BLACK NATIVE CHICKEN','CCARD OFFICE',
+  'CED BUILDING','CED CANTEEN','CED RESTROOM','CED STUDENT CENTER',
+  'CFES CLASSROOM','CHURCH','CMNS LSG','COFES BUILDING',
+  'COFES CLASSROOM/HOSTEL','CSU STUDENT CENTER','DAIRY',
+  'DAIRY CARABAO FACILITY','DAIRY PROCESSING PLANT','ECO LODGE',
+  'ECO PARK BUILDING','FARM MECHANIZATION CENTER','FEEDMILL',
+  'FOOD INNOVATION CENT','FOOD TECH BUILDING',"GENTS' DORMITORY",
+  "GENTS' DORMITORY (UNDER CONS.)",'GOAT HOUSE','GUARD HOUSE',
+  'H.E.R.O. LEARNING COMMONS','HARDENING AREA','HINANG BUILDING',
+  'HIRAYA BUILDING','HOSTEL','ITSO-TTLO OFFICE','KALINAW HALL',
+  'KINAADMAN HALL',"LADIES' DORMITORY (UNDER CONS.)",'LIBRARY BUILDING',
+  'MASAWA BUILDING','MICORIZA OFFICE','MOLBAM','NEW ADMINISTRATIVE BLDG',
+  'OATC','OLD ADMINISTRATIVE BUILDING','OLD CAS BUILDING',
+  'OLD FARM MECHANIZATION CENTER','PHYSICAL FITNESS OFFICE',
+  'ROOTING RECOVERY','ROTC OFFICE','SCHOOL OF MEDICINE (UNDER CONS.)',
+  'SHEEP HOUSE','TISSUE CULTURE LAB','UNIVERSITY GYMNASIUM (UNDER CONS.)',
+  'VERMI HOUSE','WOOD WORKSHOP/TECH VOC BUILDING',
+]
+const customBuildings = ref(JSON.parse(localStorage.getItem('pmc_custom_buildings') || '[]'))
+const allBuildings = computed(() => [...DEFAULT_BUILDINGS, ...customBuildings.value].sort((a, b) => a.localeCompare(b)))
+const selectedBuilding = ref('')
+const showAddBuilding = ref(false)
+const newBuildingInput = ref('')
+
+function onBuildingSelect() {
+  if (selectedBuilding.value === '__add_new__') {
+    selectedBuilding.value = ''
+    showAddBuilding.value = true
+    newBuildingInput.value = ''
+  } else {
+    newRec.value.buildingName = selectedBuilding.value
+  }
+}
+function confirmNewBuilding() {
+  const name = newBuildingInput.value.trim().toUpperCase()
+  if (!name) return
+  if (!DEFAULT_BUILDINGS.includes(name) && !customBuildings.value.includes(name)) {
+    customBuildings.value.push(name)
+    localStorage.setItem('pmc_custom_buildings', JSON.stringify(customBuildings.value))
+  }
+  newRec.value.buildingName = name
+  selectedBuilding.value = name
+  showAddBuilding.value = false
+  newBuildingInput.value = ''
+}
+function cancelNewBuilding() {
+  showAddBuilding.value = false
+  newBuildingInput.value = ''
+  selectedBuilding.value = ''
+  newRec.value.buildingName = ''
+}
+// ────────────────────────────────────────────────────────────────
 
 const newRec = ref({
   janitorName: '',
@@ -314,6 +433,8 @@ function createRecord() {
   })
   createMsg.value = { type:'success', text:`Record created for ${newRec.value.buildingName}!` }
   newRec.value = { janitorName:'', buildingName:'', assignedPersonnel: auth.currentUser?.name || '', month: now.getMonth()+1, year: now.getFullYear() }
+  selectedBuilding.value = ''
+  showAddBuilding.value = false
   setTimeout(() => router.push(`/inspector/record/${id}`), 800)
 }
 
@@ -329,6 +450,64 @@ function doLogout() {
   auth.logout()
   router.push('/')
 }
+
+// ── Add New Month Modal ──────────────────────────────────────────
+const addMonthModal = ref({
+  show: false,
+  sourceId: null,
+  buildingName: '',
+  janitorName: '',
+  assignedPersonnel: '',
+  month: now.getMonth() + 1,
+  year: now.getFullYear(),
+  msg: null,
+})
+
+function openAddMonth(rec) {
+  // Default to next month from this record
+  let nextMonth = rec.month + 1
+  let nextYear = rec.year
+  if (nextMonth > 12) { nextMonth = 1; nextYear++ }
+  addMonthModal.value = {
+    show: true,
+    sourceId: rec.id,
+    buildingName: rec.buildingName,
+    janitorName: rec.janitorName,
+    assignedPersonnel: rec.assignedPersonnel,
+    month: nextMonth,
+    year: nextYear,
+    msg: null,
+  }
+}
+
+function confirmAddMonth() {
+  addMonthModal.value.msg = null
+  const { buildingName, janitorName, assignedPersonnel, month, year } = addMonthModal.value
+  // Check duplicate
+  const duplicate = pmc.records.find(r =>
+    r.inspectorId === auth.currentUser?.id &&
+    r.buildingName === buildingName &&
+    r.janitorName === janitorName &&
+    r.month === month &&
+    r.year === year
+  )
+  if (duplicate) {
+    addMonthModal.value.msg = { type: 'error', text: `A record for ${buildingName} — ${months[month-1]} ${year} already exists.` }
+    return
+  }
+  const id = pmc.createRecord({
+    inspectorId: auth.currentUser?.id,
+    inspectorName: auth.currentUser?.name,
+    janitorName,
+    buildingName,
+    assignedPersonnel,
+    month,
+    year,
+  })
+  addMonthModal.value.show = false
+  setTimeout(() => router.push(`/inspector/record/${id}`), 100)
+}
+// ────────────────────────────────────────────────────────────────
 </script>
 
 <style scoped>
@@ -339,8 +518,8 @@ function doLogout() {
 
 * { font-family: 'Poppins', sans-serif !important; }
 
-.dashboard { display: flex; min-height: 100vh; background: #f5f5f0; overflow-x: hidden; }
-:global(html), :global(body) { overflow-x: hidden; max-width: 100%; }
+.dashboard { display: flex; height: 100vh; background: #f5f5f0; overflow: hidden; }
+:global(html), :global(body) { overflow: hidden; max-width: 100%; height: 100%; }
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -348,7 +527,7 @@ function doLogout() {
   background: #003300;
   display: flex; flex-direction: column;
   flex-shrink: 0;
-  position: sticky; top: 0; height: 100vh;
+  position: relative; height: 100vh;
   overflow: hidden;
   box-shadow: 4px 0 24px rgba(0,0,0,0.18);
   transition: width 0.3s ease;
@@ -562,14 +741,14 @@ tr:hover td { background: #f0f5f0 !important; }
 .history-card {
   background: #fff; border: 1.5px solid #eee;
   border-radius: 12px; padding: 16px 20px;
-  display: flex; align-items: center; justify-content: space-between;
-  transition: all 0.22s;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  transition: all 0.22s; gap: 16px;
 }
 .history-card:hover { border-color: #009900; box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
 .hc-month { font-size: 10px; color: #009900; font-weight: 700; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
 .hc-janitor { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
 .hc-details { font-size: 12px; color: #aaa; }
-.hc-right { display: flex; align-items: center; gap: 16px; }
+.hc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .hc-progress { display: flex; align-items: center; gap: 8px; }
 .hc-bar { width: 110px; height: 7px; background: #eee; border-radius: 99px; overflow: hidden; }
 .hc-fill { height: 100%; background: linear-gradient(90deg,#009900,#44cc44); border-radius: 99px; transition: width 0.5s; }
@@ -612,6 +791,27 @@ tr:hover td { background: #f0f5f0 !important; }
 .new-record-form { margin-bottom: 28px; }
 
 /* ── YEAR STEPPER ── */
+.new-building-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.new-building-row .form-control {
+  flex: 1;
+}
+.selected-building-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: #e8f5e9;
+  color: #1b5e20;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .year-stepper {
   display: flex;
   align-items: center;
@@ -661,7 +861,7 @@ tr:hover td { background: #f0f5f0 !important; }
 @media (max-width: 768px) {
   /* Hide desktop sidebar */
   .sidebar { display: none !important; }
-  .dashboard { flex-direction: column; min-height: 100svh; overflow-x: hidden; }
+  .dashboard { flex-direction: column; height: 100svh; overflow: auto; }
 
   /* Sticky top bar */
   .mobile-topbar {
@@ -721,7 +921,7 @@ tr:hover td { background: #f0f5f0 !important; }
   .drawer-footer { padding: 12px 20px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
 
   /* No horizontal scroll on main */
-  .main-content { width: 100%; max-width: 100vw; overflow-x: hidden; overflow-y: visible; }
+  .main-content { width: 100%; max-width: 100vw; overflow-x: hidden; overflow-y: auto; flex: 1; }
 
   /* Hero */
   .pmc-hero { padding-top: 38%; background-size: cover !important; }
@@ -776,5 +976,55 @@ tr:hover td { background: #f0f5f0 !important; }
   .content-title { font-size: 15px; }
   .card { padding: 12px; }
   .btn { font-size: 12px; padding: 8px 12px; }
+}
+
+/* ── Add New Month button ── */
+.btn-add-month {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; font-size: 12px; font-weight: 600;
+  background: #f0fdf4; color: #166534;
+  border: 1.5px solid #bbf7d0; border-radius: 99px;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  margin-top: 10px;
+  font-family: 'Poppins', sans-serif !important;
+}
+.btn-add-month:hover { background: #dcfce7; border-color: #4ade80; color: #14532d; }
+
+/* ── Modal ── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.18s ease;
+}
+.modal-box {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+  width: 100%; max-width: 400px;
+  animation: fadeUp 0.22s ease;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: #003300; }
+.modal-close {
+  background: none; border: none; font-size: 16px; cursor: pointer;
+  color: #aaa; line-height: 1; padding: 2px 6px; border-radius: 6px;
+  transition: all 0.15s;
+}
+.modal-close:hover { background: #fee2e2; color: #dc2626; }
+.modal-body { padding: 18px 20px; }
+.modal-rec-info { margin-bottom: 16px; padding: 10px 14px; background: #f0fdf4; border-radius: 10px; border-left: 3px solid #22c55e; }
+.modal-building { font-size: 14px; font-weight: 700; color: #14532d; }
+.modal-janitor { font-size: 12px; color: #166534; margin-top: 2px; }
+.modal-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid #f0f0f0;
 }
 </style>

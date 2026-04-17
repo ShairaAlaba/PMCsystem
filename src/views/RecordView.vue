@@ -252,7 +252,7 @@ function printRecord() { window.print() }
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
 
-.record-page { min-height: 100vh; background: var(--green-mist); }
+.record-page { height: 100vh; display: flex; flex-direction: column; background: var(--green-mist); overflow: hidden; }
 
 .top-bar {
   display: flex; align-items: center; gap: 16px;
@@ -272,7 +272,11 @@ function printRecord() { window.print() }
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   padding: 24px;
-  overflow-x: auto;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* =====================
@@ -502,12 +506,32 @@ function printRecord() { window.print() }
 }
 .ri-value--wide { min-width: 200px; }
 
+.table-wrap {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  /* Always-visible scrollbars */
+  scrollbar-width: thin;
+  scrollbar-color: #1a5c1a #e8f5e9;
+}
+.table-wrap::-webkit-scrollbar { width: 8px; height: 8px; }
+.table-wrap::-webkit-scrollbar-track { background: #e8f5e9; border-radius: 4px; }
+.table-wrap::-webkit-scrollbar-thumb { background: #1a5c1a; border-radius: 4px; }
+.table-wrap::-webkit-scrollbar-thumb:hover { background: #003300; }
+.table-wrap::-webkit-scrollbar-corner { background: #e8f5e9; }
+
 .pmc-table {
   width: 100%;
   border-collapse: collapse;
   min-width: 1100px;
   font-size: 11px;
   margin-top: 12px;
+}
+.pmc-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 .pmc-table th {
   background: #1a5c1a;
@@ -574,13 +598,14 @@ tr.locked > td { background: #fafafa; }
 .remarks-input:focus { background: rgba(0,192,75,0.05); }
 
 .legend {
-  display: flex; align-items: center; gap: 24px;
-  padding: 12px 20px;
-  margin: 0 20px 20px;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 10px 20px;
+  margin: 0 20px 16px;
   background: white;
   border-radius: var(--radius-md);
   font-size: 13px;
   color: var(--gray-700);
+  flex-shrink: 0;
 }
 .legend-item { display: flex; align-items: center; gap: 8px; }
 .leg-check { width: 20px; height: 20px; background: #e8f5e9; border: 1px solid #bbb; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--green-forest); font-weight: 700; }
@@ -611,6 +636,10 @@ tr.locked > td { background: #fafafa; }
    RESPONSIVE
    ══════════════════════════════════════ */
 @media (max-width: 768px) {
+  /* Restore normal scroll on mobile */
+  .record-page { height: 100svh; overflow: hidden; }
+  .print-area { margin: 10px; overflow: hidden; }
+
   /* Top bar — compact, prevent overflow */
   .top-bar {
     padding: 10px 12px;
@@ -634,12 +663,8 @@ tr.locked > td { background: #fafafa; }
   }
   .top-actions .saved-msg { font-size: 11px; padding: 5px 9px; }
 
-  /* Print area — tighter on mobile */
-  .print-area {
-    margin: 10px;
-    padding: 14px 12px;
-    border-radius: 8px;
-  }
+  /* Print area — tighter padding on mobile */
+  .print-area { padding: 14px 12px; border-radius: 8px; }
 
   /* Record info — stack vertically on mobile */
   .rec-info {
@@ -660,12 +685,12 @@ tr.locked > td { background: #fafafa; }
   /* Print header images — smaller on mobile */
   .header-img { max-height: 48px; }
 
-  /* Table — horizontal scroll with touch support */
+  /* Table — full scroll with touch support */
   .table-wrap {
-    overflow-x: auto;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
-    /* Show scroll hint on mobile */
-    position: relative;
+    flex: 1;
+    min-height: 150px;
   }
 
   /* Legend — compact wrap */
