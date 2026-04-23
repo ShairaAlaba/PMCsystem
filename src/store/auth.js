@@ -25,30 +25,100 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('pmc_online_logs', JSON.stringify(this.onlineLogs))
     },
 
-    register({ name, email, password, role, code }) {
-      // Validate email verification code (simulated - code is first 6 chars of email uppercased)
-      const expectedCode = email.slice(0, 6).toUpperCase().replace(/[^A-Z0-9]/g, 'X').padEnd(6, '0')
-      // For demo: any 6-digit code is accepted (in real system this would be backend verified)
-      if (!/^\d{6}$/.test(code)) {
-        return { success: false, error: 'Invalid verification code. Please enter the 6-digit code sent to your email.' }
+    /**
+     * Validates that the email is a real Gmail address.
+     */
+    isGmailAddress(email) {
+      return /^[a-zA-Z0-9._%+\-]+@gmail\.com$/.test(email.trim().toLowerCase())
+    },
+
+    /**
+     * Sends a verification link (simulated).
+     * Stores a pending verification token in localStorage.
+     * Returns the token so AuthPage can construct the simulated link.
+     */
+    sendVerificationLink({ name, email, password, role }) {
+      if (!this.isGmailAddress(email)) {
+        return { success: false, error: 'Only Gmail accounts (@gmail.com) are allowed.' }
       }
 
       const exists = this.accounts.find(a => a.email === email)
-      if (exists) return { success: false, error: 'Email already registered.' }
+      if (exists) return { success: false, error: 'This Gmail address is already registered.' }
+
+      // Generate a unique token
+      const token = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+      // Store pending registration data
+      const pending = { name, email, password, role, token, createdAt: Date.now() }
+      localStorage.setItem('pmc_pending_verification', JSON.stringify(pending))
+
+      return { success: true, token }
+    },
+
+    /**
+     * Called when the user clicks the verification link.
+     * Reads the pending token from localStorage and completes registration.
+     */
+    verifyAndRegister(token) {
+      const raw = localStorage.getItem('pmc_pending_verification')
+      if (!raw) return { success: false, error: 'No pending verification found. Please register again.' }
+
+      let pending
+      try { pending = JSON.parse(raw) } catch {
+        return { success: false, error: 'Verification data is corrupted. Please register again.' }
+      }
+
+      if (pending.token !== token) {
+        return { success: false, error: 'Invalid or expired verification link.' }
+      }
+
+      // Token expires after 15 minutes
+      if (Date.now() - pending.createdAt > 15 * 60 * 1000) {
+        localStorage.removeItem('pmc_pending_verification')
+        return { success: false, error: 'Verification link has expired. Please register again.' }
+      }
+
+      const exists = this.accounts.find(a => a.email === pending.email)
+      if (exists) {
+        localStorage.removeItem('pmc_pending_verification')
+        return { success: false, error: 'This email is already registered.' }
+      }
 
       const account = {
         id: Date.now().toString(),
-        name,
-        email,
-        password, // In real app: hash this
-        role,
+        name: pending.name,
+        email: pending.email,
+        password: pending.password,
+        role: pending.role,
         createdAt: new Date().toISOString(),
         isOnline: false,
         lastLogin: null,
+        emailVerified: true,
       }
       this.accounts.push(account)
       this.saveAccounts()
-      return { success: true }
+
+      // Mark as verified so the polling page can proceed
+      localStorage.setItem('pmc_email_verified', token)
+      localStorage.removeItem('pmc_pending_verification')
+
+      return { success: true, role: account.role, email: account.email, password: pending.password }
+    },
+
+    /**
+     * Check if the pending verification has been completed.
+     * Used by the waiting screen to poll for completion.
+     */
+    checkVerified(token) {
+      const verified = localStorage.getItem('pmc_email_verified')
+      return verified === token
+    },
+
+    /**
+     * Clear the verified flag after it's been consumed.
+     */
+    clearVerifiedFlag() {
+      localStorage.removeItem('pmc_email_verified')
     },
 
     login(email, password) {
@@ -61,7 +131,6 @@ export const useAuthStore = defineStore('auth', {
       this.saveAccounts()
       this.saveUser()
 
-      // Log session
       this.onlineLogs.push({
         userId: account.id,
         userName: account.name,
@@ -82,7 +151,6 @@ export const useAuthStore = defineStore('auth', {
           account.isOnline = false
           this.saveAccounts()
         }
-        // Update log
         const log = [...this.onlineLogs].reverse().find(l => l.userId === this.user.id && !l.logoutTime)
         if (log) {
           log.logoutTime = new Date().toISOString()

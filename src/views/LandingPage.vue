@@ -25,6 +25,7 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
+        <br>
         <div class="hero-badge animate-fadeUp" style="animation-delay:0.1s">
           <span class="badge-dot"></span>
           Caraga State University · General Services Office
@@ -34,13 +35,14 @@
           <span class="title-accent">Maintenance</span><br>
           Checklist
         </h1>
-       
+      
+       <br>
         <div class="hero-actions animate-fadeUp" style="animation-delay:0.4s">
           <router-link to="/auth" class="btn btn-primary btn-lg">
             Get Started
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
           </router-link>
-          <a href="#features" class="btn btn-outline btn-lg">Learn More</a>
+
         </div>
         <div class="hero-stats animate-fadeUp" style="animation-delay:0.5s">
           <div class="stat">
@@ -63,48 +65,22 @@
       </div>
     </section>
 
-    <!-- Features -->
-    <section class="features" id="features">
-      <div class="features-container">
-        <div class="section-label">System Features</div>
-        <h2 class="section-title">Everything you need to manage maintenance</h2>
-        <div class="features-grid">
-          <div class="feature-card" v-for="(f, i) in features" :key="i">
-            <div class="feature-icon" :style="`background: ${f.bg}`">
-              <span v-html="f.icon"></span>
-            </div>
-            <h3>{{ f.title }}</h3>
-            <p>{{ f.desc }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    
 
     <!-- CTA Section -->
     <section class="cta-section">
       <div class="cta-content">
         <h2>Ready to get started?</h2>
         <p>Create your account and begin tracking maintenance activities today.</p>
-        <router-link to="/auth" class="btn btn-primary btn-lg">
-          Get Started Now
-          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-        </router-link>
+      <br>
+      <br>
       </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-inner">
-        <div class="footer-brand">
-          <img :src="pmcLogo" alt="PMC Logo" class="footer-logo-img" />
-          <strong>Caraga State University</strong> — General Services Office
-        </div>
-        <div class="footer-links">
-          <span>Ampayon, Butuan City 8600, Philippines</span>
-          <span>Competence · Service · Uprightness</span>
-        </div>
-      </div>
-    </footer>
+   
+       
+      
   </div>
 </template>
 
@@ -156,7 +132,7 @@ const features = [
 .landing {
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Background */
@@ -457,6 +433,7 @@ const features = [
     grid-template-columns: 1fr;
     padding: 76px 18px 40px;
     gap: 28px;
+    min-height: unset;
   }
   .hero-visual { order: -1; }
   .hero-image-wrap { max-width: 280px; margin: 0 auto; }

@@ -294,14 +294,14 @@ function printRecord() { window.print() }
 
   .print-area {
     margin: 0 !important;
-    padding: 8mm 6mm 5mm 6mm !important;
+    padding: 8mm 8mm 5mm 8mm !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     overflow: visible !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    height: 215.9mm !important;
-    max-height: 215.9mm !important;
+    height: auto !important;
+    max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
   }
@@ -317,8 +317,8 @@ function printRecord() { window.print() }
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
   }
-  .header-left, .header-right { flex: 0 0 auto !important; }
-  .header-img { max-height: 90px !important; height: auto !important; display: block !important; object-fit: contain !important; }
+  .header-left, .header-right { flex: 0 0 auto !important; max-width: 45% !important; }
+  .header-img { max-height: 90px !important; max-width: 100% !important; height: auto !important; display: block !important; object-fit: contain !important; }
 
   /* ── Record info ── */
   .rec-info { display: flex !important; gap: 24px !important; margin-bottom: 2px !important; margin-top: 2px !important; flex-wrap: nowrap !important; flex-shrink: 0 !important; }
@@ -343,6 +343,8 @@ function printRecord() { window.print() }
     min-width: 0 !important;
     table-layout: fixed !important;
     border-collapse: collapse !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Fixed column widths */
@@ -362,7 +364,10 @@ function printRecord() { window.print() }
     vertical-align: middle !important;
     color: #fff !important;
     background: #1a5c1a !important;
-    border: 1px solid #000 !important;
+    border-top: 1px solid #000000 !important;
+    border-right: 1px solid #000000 !important;
+    border-bottom: 1px solid #000000 !important;
+    border-left: 1px solid #000000 !important;
     padding: 2px 1px !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
@@ -397,6 +402,7 @@ function printRecord() { window.print() }
     height: 4.5mm !important;
     text-align: center !important;
     vertical-align: middle !important;
+    border: 1px solid #000000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -464,12 +470,12 @@ function printRecord() { window.print() }
   tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   thead { display: table-header-group !important; }
 
-  /* ── Footer pinned to bottom edge ── */
+  /* ── Footer right below the table ── */
   .print-footer {
     display: flex !important;
     justify-content: flex-start !important;
-    margin-top: auto !important;
-    padding-top: 3px !important;
+    margin-top: 4px !important;
+    padding-top: 2px !important;
     padding-bottom: 0 !important;
     flex-shrink: 0 !important;
   }

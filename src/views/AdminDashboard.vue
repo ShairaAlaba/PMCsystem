@@ -275,6 +275,10 @@
                       <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                       View
                     </button>
+                    <button class="btn btn-print-rec" @click="printRecord(rec.id)" title="Print this record">
+                      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-6 0h-4v4h4v-4z"/></svg>
+                      Print
+                    </button>
                     <button class="btn btn-ghost delete-btn" @click="deleteRec(rec.id)" title="Delete">
                       <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
@@ -502,6 +506,19 @@ function doLogout() {
   auth.logout()
   router.push('/')
 }
+
+function printRecord(id) {
+  // Navigate to record view then trigger print
+  const route = `/admin/record/${id}`
+  // Open in new tab so admin stays on dashboard
+  const url = window.location.href.split('#')[0] + '#' + route
+  const win = window.open(url, '_blank')
+  if (win) {
+    win.addEventListener('load', () => {
+      setTimeout(() => win.print(), 800)
+    })
+  }
+}
 </script>
 
 <style scoped>
@@ -513,10 +530,10 @@ function doLogout() {
 * { font-family: 'Poppins', sans-serif !important; }
 
 /* Dashboard layout */
-.dashboard { display: flex; min-height: 100vh; background: #f5f5f0; overflow-x: hidden; }
+.dashboard { display: flex; height: 100vh; background: #f5f5f0; overflow: hidden; }
 
 /* Prevent body-level horizontal scroll */
-:global(html), :global(body) { overflow-x: hidden; max-width: 100%; }
+:global(html), :global(body) { overflow: hidden; max-width: 100%; height: 100%; }
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -524,7 +541,7 @@ function doLogout() {
   background: #003300;
   display: flex; flex-direction: column;
   flex-shrink: 0;
-  position: sticky; top: 0; height: 100vh;
+  position: relative; height: 100vh;
   overflow: hidden;
   box-shadow: 4px 0 24px rgba(0,0,0,0.18);
 }
@@ -638,9 +655,15 @@ function doLogout() {
 
 /* ── MAIN CONTENT ── */
 .main-content {
-  flex: 1; overflow-y: auto;
+  flex: 1; overflow-y: auto; overflow-x: hidden;
   background: #f5f5f0;
+  scrollbar-width: thin;
+  scrollbar-color: #1a5c1a #e8f5e9;
 }
+.main-content::-webkit-scrollbar { width: 8px; }
+.main-content::-webkit-scrollbar-track { background: #e8f5e9; }
+.main-content::-webkit-scrollbar-thumb { background: #1a5c1a; border-radius: 4px; }
+.main-content::-webkit-scrollbar-thumb:hover { background: #003300; }
 
 /* ── CONTENT HEADER STRIP ── */
 .content-header {
@@ -878,7 +901,16 @@ tr:hover td { background: #f0f5f0 !important; }
 .rr-bar { width: 80px; height: 6px; background: #eee; border-radius: 99px; overflow: hidden; }
 .rr-fill { height: 100%; border-radius: 99px; }
 .rr-pct { font-size: 11px; color: #888; min-width: 28px; }
-.rr-actions { display: flex; gap: 4px; }
+.rr-actions { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.btn-print-rec {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  background: #fffbeb; color: #92400e;
+  border: 1.5px solid #fcd34d; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  font-family: 'Poppins', sans-serif !important;
+}
+.btn-print-rec:hover { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
 
 /* Inspectors tab */
 .insp-list { display: flex; flex-direction: column; gap: 10px; }
@@ -947,7 +979,7 @@ html, body { overflow-x: hidden; max-width: 100%; }
   /* Hide desktop sidebar entirely */
   .sidebar { display: none !important; }
 
-  .dashboard { flex-direction: column; min-height: 100svh; }
+  .dashboard { flex-direction: column; height: 100svh; overflow: auto; }
 
   /* Sticky top bar */
   .mobile-topbar {
@@ -1108,12 +1140,13 @@ html, body { overflow-x: hidden; max-width: 100%; }
     border-top: 1px solid rgba(255,255,255,0.08);
   }
 
-  /* ── Main content — locked width, no side scroll ── */
+  /* ── Main content — locked width, natural scroll ── */
   .main-content {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
-    overflow-y: visible;
+    overflow-y: auto;
+    flex: 1;
   }
 
   /* ── Hero banner ── */
