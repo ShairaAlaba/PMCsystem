@@ -790,7 +790,7 @@ tr.locked > td { background: #fafafa; }
 .picker-check:hover { background: #dcfce7; border-color: #4ade80; }
 .picker-check .picker-icon { color: var(--green-forest); }
 .picker-x { border-color: #fecaca; background: #fff5f5; }
-.picker-x:hover { background: #fee2e2; border-color: #f87171; }
+.picker-x:hover { background: #fecaca; border-color: #f87171; }
 .picker-x .picker-icon { color: #dc2626; }
 .picker-clear { border-color: var(--gray-300); }
 .picker-clear:hover { background: var(--gray-200); }

@@ -530,10 +530,10 @@ function printRecord(id) {
 * { font-family: 'Poppins', sans-serif !important; }
 
 /* Dashboard layout */
-.dashboard { display: flex; height: 100vh; background: #f5f5f0; overflow: hidden; }
+.dashboard { display: flex; height: 100dvh; background: #f5f5f0; overflow: hidden; }
 
 /* Prevent body-level horizontal scroll */
-:global(html), :global(body) { overflow: hidden; max-width: 100%; height: 100%; }
+:global(html), :global(body) { overflow-x: hidden; max-width: 100%; }
 
 /* ── SIDEBAR ── */
 .sidebar {

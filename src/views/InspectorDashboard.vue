@@ -518,8 +518,8 @@ function confirmAddMonth() {
 
 * { font-family: 'Poppins', sans-serif !important; }
 
-.dashboard { display: flex; height: 100vh; background: #f5f5f0; overflow: hidden; }
-:global(html), :global(body) { overflow: hidden; max-width: 100%; height: 100%; }
+.dashboard { display: flex; height: 100dvh; background: #f5f5f0; overflow: hidden; }
+:global(html), :global(body) { overflow-x: hidden; max-width: 100%; }
 
 /* ── SIDEBAR ── */
 .sidebar {
