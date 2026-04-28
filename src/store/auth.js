@@ -161,6 +161,25 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('pmc_user')
     },
 
+    logoutOnClose() {
+      // Called on tab close/refresh — marks user offline and logs logout time
+      // Uses synchronous localStorage writes (no async, safe for beforeunload)
+      if (!this.user) return
+      const accounts = JSON.parse(localStorage.getItem('pmc_accounts') || '[]')
+      const account = accounts.find(a => a.id === this.user.id)
+      if (account) {
+        account.isOnline = false
+        localStorage.setItem('pmc_accounts', JSON.stringify(accounts))
+      }
+      const logs = JSON.parse(localStorage.getItem('pmc_online_logs') || '[]')
+      const log = [...logs].reverse().find(l => l.userId === this.user.id && !l.logoutTime)
+      if (log) {
+        log.logoutTime = new Date().toISOString()
+        localStorage.setItem('pmc_online_logs', JSON.stringify(logs))
+      }
+      localStorage.removeItem('pmc_user')
+    },
+
     getInspectors() {
       return this.accounts.filter(a => a.role === 'inspector')
     },

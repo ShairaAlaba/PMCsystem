@@ -46,9 +46,6 @@ router.beforeEach((to, from, next) => {
       return next(auth.isAdmin ? '/admin' : '/inspector')
     }
   }
-  if (to.path === '/auth' && auth.isLoggedIn) {
-    return next(auth.isAdmin ? '/admin' : '/inspector')
-  }
   next()
 })
 
