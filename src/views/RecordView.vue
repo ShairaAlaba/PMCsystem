@@ -231,7 +231,11 @@ function flashSaved() {
   savedTimer = setTimeout(() => { savedMsg.value = false }, 2500)
 }
 
-function saveAll() { pmc.save(); flashSaved() }
+async function saveAll() {
+  flashSaved()
+  await new Promise(resolve => setTimeout(resolve, 800))
+  router.push(auth.isAdmin ? '/admin' : '/inspector')
+}
 
 function isToday(day) {
   return day === todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
@@ -583,7 +587,11 @@ function printRecord() { window.print() }
   white-space: nowrap; text-overflow: ellipsis;
 }
 
-tr.today > td { background: #fffde7 !important; }
+tr.today > td { background: #abd1b5 !important; }
+
+@media print {
+  tr.today > td { background: white !important; }
+}
 tr.locked > td { background: #fafafa; }
 
 .cell-wrap {
@@ -616,7 +624,7 @@ tr.locked > td { background: #fafafa; }
 .legend-item { display: flex; align-items: center; gap: 8px; }
 .leg-check { width: 20px; height: 20px; background: #e8f5e9; border: 1px solid #bbb; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--green-forest); font-weight: 700; }
 .leg-empty { width: 20px; height: 20px; border: 1px solid #bbb; }
-.leg-today { width: 20px; height: 20px; background: #fffde7; border: 1px solid #bbb; }
+.leg-today { width: 20px; height: 20px; background: #abd1b5; border: 1px solid #bbb; }
 .leg-locked { width: 20px; height: 20px; background: #fafafa; border: 1px solid #bbb; }
 
 .save-btn { animation: pulse 0.3s ease; }
