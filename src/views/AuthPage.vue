@@ -35,9 +35,7 @@
           <button class="auth-tab" :class="{ active: mode === 'register' }" @click="switchToRegister">Create Account</button>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-             LOGIN
-        ════════════════════════════════════════════ -->
+        <!-- LOGIN -->
         <div v-if="mode === 'login'" class="auth-form animate-fadeUp">
           <h2 class="form-heading">Welcome back</h2>
           <p class="form-subheading">Sign in to your account to continue</p>
@@ -45,23 +43,14 @@
           <div v-if="error" class="alert alert-error">{{ error }}</div>
 
           <div class="form-group">
-            <label class="form-label">Gmail Address</label>
-            <div class="gmail-input-wrap">
-              <span class="gmail-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 11L4 6H20ZM20 18H4V8L12 13L20 8V18Z" fill="currentColor"/>
-                </svg>
-                @gmail.com
-              </span>
-              <input
-                v-model="loginData.email"
-                type="email"
-                class="form-control gmail-input"
-                placeholder="yourname@gmail.com"
-                @keyup.enter="doLogin"
-              />
-            </div>
-            <span class="field-hint">Only Gmail accounts are accepted</span>
+            <label class="form-label">Email Address</label>
+            <input
+              v-model="loginData.email"
+              type="email"
+              class="form-control"
+              placeholder="your@email.com"
+              @keyup.enter="doLogin"
+            />
           </div>
 
           <div class="form-group">
@@ -86,13 +75,13 @@
             </div>
           </div>
 
-          <!-- Email-not-verified warning shown after login attempt -->
+          <!-- Email-not-verified warning -->
           <div v-if="needsVerification" class="alert alert-warning">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
             </svg>
             <span>
-              Please verify your Gmail first.
+              Please verify your email first.
               <button class="btn-inline-link" @click="resendVerificationFromLogin" :disabled="resendCooldown > 0">
                 {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend email' }}
               </button>
@@ -106,9 +95,7 @@
           <p class="switch-text">Don't have an account? <a href="#" @click.prevent="switchToRegister">Create one</a></p>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-             REGISTER — Step 1: Fill in info
-        ════════════════════════════════════════════ -->
+        <!-- REGISTER — Step 1 -->
         <div v-if="mode === 'register' && step === 1" class="auth-form animate-fadeUp">
           <h2 class="form-heading">Create Account</h2>
           <p class="form-subheading">Step 1 of 2 — Your Information</p>
@@ -121,17 +108,13 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Gmail Address</label>
-            <div class="gmail-input-wrap">
-              <span class="gmail-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 11L4 6H20ZM20 18H4V8L12 13L20 8V18Z" fill="currentColor"/>
-                </svg>
-                @gmail.com
-              </span>
-              <input v-model="regData.email" type="email" class="form-control gmail-input" placeholder="yourname@gmail.com" />
-            </div>
-            <span class="field-hint">Must be a valid Gmail address (@gmail.com)</span>
+            <label class="form-label">Email Address</label>
+            <input
+              v-model="regData.email"
+              type="email"
+              class="form-control"
+              placeholder="your@email.com"
+            />
           </div>
 
           <div class="form-group">
@@ -153,7 +136,7 @@
                 </svg>
               </button>
             </div>
-            <span class="field-hint">Firebase requires at least 6 characters</span>
+            <span class="field-hint">At least 6 characters</span>
           </div>
 
           <div class="form-group">
@@ -189,17 +172,14 @@
           <p class="switch-text">Already have an account? <a href="#" @click.prevent="switchToLogin">Sign in</a></p>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-             REGISTER — Step 2: Check email
-        ════════════════════════════════════════════ -->
+        <!-- REGISTER — Step 2 -->
         <div v-if="mode === 'register' && step === 2" class="auth-form animate-fadeUp">
-          <h2 class="form-heading">Check Your Gmail</h2>
+          <h2 class="form-heading">Check Your Email</h2>
           <p class="form-subheading">Step 2 of 2 — Verify your email address</p>
 
           <div v-if="error" class="alert alert-error">{{ error }}</div>
 
           <div class="verify-waiting">
-            <!-- Animated Gmail icon -->
             <div class="verify-icon-wrap">
               <div class="verify-icon-ring">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -214,11 +194,10 @@
               <strong class="verify-email">{{ regData.email }}</strong>
             </p>
             <p class="verify-subdesc">
-              Open your Gmail inbox and click the verification link. Once you've verified,
+              Open your inbox and click the verification link. Once verified,
               come back here and click <strong>I've verified my email</strong> below.
             </p>
 
-            <!-- Instructions box -->
             <div class="instructions-box">
               <div class="instructions-label">
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,13 +206,12 @@
                 What to do
               </div>
               <ol class="instructions-list">
-                <li>Open Gmail and find the email from <strong>noreply@pmcsystem.firebaseapp.com</strong></li>
+                <li>Open your email inbox and find the email from <strong>noreply@pmcsystem.firebaseapp.com</strong></li>
                 <li>Click the <strong>"Verify email address"</strong> link inside it</li>
                 <li>Return here and press the button below</li>
               </ol>
             </div>
 
-            <!-- Manual "I verified" button — user clicks after clicking link in email -->
             <button class="btn btn-primary w-full" @click="checkVerifiedAndLogin" :disabled="loading">
               <span v-if="loading" class="spinner"></span>
               <span v-else>
@@ -266,23 +244,20 @@ import { useAuthStore } from '@/store/auth'
 import pmcLogo from '@/assets/pmclogo.png'
 import libSketch from '@/assets/libsketch.png'
 
-const router   = useRouter()
+const router    = useRouter()
 const authStore = useAuthStore()
 
-// ─── UI state ───────────────────────────────────────────────────────────────
-const mode             = ref('login')
-const step             = ref(1)
-const loading          = ref(false)
-const error            = ref('')
-const showPw           = ref(false)
-const needsVerification = ref(false)   // shown on login when email unverified
-const resendCooldown   = ref(0)
+const mode              = ref('login')
+const step              = ref(1)
+const loading           = ref(false)
+const error             = ref('')
+const showPw            = ref(false)
+const needsVerification = ref(false)
+const resendCooldown    = ref(0)
 
-// ─── Form data ───────────────────────────────────────────────────────────────
 const loginData = ref({ email: '', password: '' })
 const regData   = ref({ name: '', email: '', password: '', role: 'inspector' })
 
-// ─── Cooldown timer ──────────────────────────────────────────────────────────
 let cooldownTimer = null
 
 function startResendCooldown(seconds = 60) {
@@ -294,7 +269,6 @@ function startResendCooldown(seconds = 60) {
   }, 1000)
 }
 
-// ─── Tab switching ───────────────────────────────────────────────────────────
 function switchToLogin() {
   mode.value  = 'login'
   step.value  = 1
@@ -314,17 +288,12 @@ function backToStep1() {
   error.value = ''
 }
 
-// ─── Gmail validation ────────────────────────────────────────────────────────
-function isGmail(email) {
-  return /^[a-zA-Z0-9._%+\-]+@gmail\.com$/.test(email.trim().toLowerCase())
+// ── Accept any valid email format (gmail, carsu, or any other) ───────────────
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
 }
 
-// ─── LOGIN ───────────────────────────────────────────────────────────────────
-// Calls authStore.login() which must:
-//   1. signInWithEmailAndPassword(auth, email, password)
-//   2. Check firebaseUser.emailVerified — if false, sign out and return { success: false, needsVerification: true }
-//   3. Fetch the user's role from Firestore (users/{uid}.role)
-//   4. Set pinia state and return { success: true, role }
+// ── LOGIN ────────────────────────────────────────────────────────────────────
 async function doLogin() {
   error.value             = ''
   needsVerification.value = false
@@ -333,8 +302,8 @@ async function doLogin() {
     error.value = 'Please fill in all fields.'
     return
   }
-  if (!isGmail(loginData.value.email)) {
-    error.value = 'Only Gmail accounts (@gmail.com) are allowed.'
+  if (!isValidEmail(loginData.value.email)) {
+    error.value = 'Please enter a valid email address.'
     return
   }
 
@@ -345,7 +314,6 @@ async function doLogin() {
   if (!res.success) {
     if (res.needsVerification) {
       needsVerification.value = true
-      // Store email so resend works
       regData.value.email    = loginData.value.email
       regData.value.password = loginData.value.password
     } else {
@@ -357,21 +325,15 @@ async function doLogin() {
   router.push(res.role === 'admin' ? '/admin' : '/inspector')
 }
 
-// ─── REGISTER — Step 1 ───────────────────────────────────────────────────────
-// Calls authStore.register() which must:
-//   1. createUserWithEmailAndPassword(auth, email, password)
-//   2. sendEmailVerification(firebaseUser)
-//   3. Write { name, email, role, createdAt } to Firestore users/{uid}
-//   4. Sign the user OUT so they can't access the app until verified
-//   5. Return { success: true } or { success: false, error: 'message' }
+// ── REGISTER — Step 1 ────────────────────────────────────────────────────────
 async function doRegister() {
   error.value = ''
 
-  if (!regData.value.name.trim())       { error.value = 'Please enter your full name.'; return }
-  if (!regData.value.email)             { error.value = 'Please enter your Gmail address.'; return }
-  if (!isGmail(regData.value.email))    { error.value = 'Only Gmail accounts (@gmail.com) are allowed.'; return }
-  if (regData.value.password.length < 6){ error.value = 'Password must be at least 6 characters.'; return }
-  if (!regData.value.role)              { error.value = 'Please select a role.'; return }
+  if (!regData.value.name.trim())        { error.value = 'Please enter your full name.'; return }
+  if (!regData.value.email)              { error.value = 'Please enter your email address.'; return }
+  if (!isValidEmail(regData.value.email)){ error.value = 'Please enter a valid email address.'; return }
+  if (regData.value.password.length < 6) { error.value = 'Password must be at least 6 characters.'; return }
+  if (!regData.value.role)               { error.value = 'Please select a role.'; return }
 
   loading.value = true
   const res = await authStore.register({
@@ -382,69 +344,42 @@ async function doRegister() {
   })
   loading.value = false
 
-  if (!res.success) {
-    error.value = res.error
-    return
-  }
+  if (!res.success) { error.value = res.error; return }
 
-  // Move to step 2 — user must click link in Gmail
   step.value = 2
   startResendCooldown()
 }
 
-// ─── REGISTER — Step 2: User clicked link, now sign them in ─────────────────
-// Calls authStore.loginAfterVerification() which must:
-//   1. signInWithEmailAndPassword(auth, email, password)
-//   2. reload the user (firebaseUser.reload())
-//   3. Check firebaseUser.emailVerified — if still false return { success: false, error: '...' }
-//   4. Fetch role from Firestore and set pinia state
-//   5. Return { success: true, role }
+// ── REGISTER — Step 2 ────────────────────────────────────────────────────────
 async function checkVerifiedAndLogin() {
   error.value   = ''
   loading.value = true
-
   const res = await authStore.loginAfterVerification(
     regData.value.email,
     regData.value.password
   )
   loading.value = false
-
-  if (!res.success) {
-    error.value = res.error
-    return
-  }
-
+  if (!res.success) { error.value = res.error; return }
   router.push(res.role === 'admin' ? '/admin' : '/inspector')
 }
 
-// ─── Resend verification (from Step 2 register screen) ──────────────────────
-// Calls authStore.resendVerificationEmail() which must:
-//   1. signInWithEmailAndPassword temporarily
-//   2. sendEmailVerification(firebaseUser)
-//   3. Sign out again
-//   4. Return { success: true } or { success: false, error }
+// ── RESEND (from Step 2) ─────────────────────────────────────────────────────
 async function resendVerificationFromRegister() {
   if (resendCooldown.value > 0) return
   error.value   = ''
   loading.value = true
-  const res = await authStore.resendVerificationEmail(
-    regData.value.email,
-    regData.value.password
-  )
+  const res = await authStore.resendVerificationEmail(regData.value.email, regData.value.password)
   loading.value = false
   if (!res.success) { error.value = res.error; return }
   startResendCooldown()
 }
 
-// ─── Resend verification (from Login screen warning) ─────────────────────────
+// ── RESEND (from Login warning) ──────────────────────────────────────────────
 async function resendVerificationFromLogin() {
   if (resendCooldown.value > 0) return
   error.value   = ''
   loading.value = true
-  const res = await authStore.resendVerificationEmail(
-    regData.value.email,   // populated when needsVerification fires
-    regData.value.password
-  )
+  const res = await authStore.resendVerificationEmail(regData.value.email, regData.value.password)
   loading.value = false
   if (!res.success) { error.value = res.error; return }
   startResendCooldown()
@@ -454,14 +389,12 @@ onUnmounted(() => clearInterval(cooldownTimer))
 </script>
 
 <style scoped>
-/* ── Layout ───────────────────────────────────────────────────────────────── */
 .auth-page {
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
 }
 
-/* ── Left panel ───────────────────────────────────────────────────────────── */
 .auth-left {
   background: var(--green-darkest);
   position: relative;
@@ -479,196 +412,84 @@ onUnmounted(() => clearInterval(cooldownTimer))
   opacity: 0.3;
   z-index: 0;
 }
-.auth-left-inner {
-  padding: 40px;
-  position: relative;
-  z-index: 1;
-  width: 100%;
-}
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(255,255,255,0.5);
-  font-size: 13px;
-  text-decoration: none;
-  margin-bottom: 40px;
-  transition: color 0.2s;
-}
+.auth-left-inner { padding: 40px; position: relative; z-index: 1; width: 100%; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.5); font-size: 13px; text-decoration: none; margin-bottom: 40px; transition: color 0.2s; }
 .back-link:hover { color: var(--green-primary); }
 .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
 .brand-logo { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
 .brand-logo-img { width: 48px; height: 48px; object-fit: contain; }
 .brand-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: white; }
 .brand-sub { font-size: 12px; color: rgba(255,255,255,0.45); }
-.auth-illustration {
-  display: flex; align-items: center; justify-content: center;
-  margin: 32px 0; padding: 0 10px;
-}
-.auth-pmc-logo {
-  width: 100%; max-width: 340px; height: auto; object-fit: contain; display: block;
-  animation: float 6s ease-in-out infinite;
-  filter: drop-shadow(0 16px 40px rgba(0, 192, 75, 0.3));
-}
+.auth-illustration { display: flex; align-items: center; justify-content: center; margin: 32px 0; padding: 0 10px; }
+.auth-pmc-logo { width: 100%; max-width: 340px; height: auto; object-fit: contain; display: block; animation: float 6s ease-in-out infinite; filter: drop-shadow(0 16px 40px rgba(0,192,75,0.3)); }
 .auth-quote { color: rgba(255,255,255,0.55); font-style: italic; font-size: 16px; font-family: var(--font-display); }
 .auth-quote-sub { font-size: 12px; font-style: normal; margin-top: 4px; color: var(--green-primary); }
 
-/* ── Right panel ──────────────────────────────────────────────────────────── */
 .auth-right { display: flex; align-items: center; justify-content: center; background: white; padding: 40px; }
 .auth-form-wrap { width: 100%; max-width: 420px; }
 
-/* ── Tabs ─────────────────────────────────────────────────────────────────── */
-.auth-tabs {
-  display: flex; background: var(--gray-100);
-  border-radius: var(--radius-md); padding: 4px; margin-bottom: 32px;
-}
-.auth-tab {
-  flex: 1; padding: 10px; border: none;
-  border-radius: calc(var(--radius-md) - 4px);
-  font-family: var(--font-body); font-size: 14px; font-weight: 500;
-  cursor: pointer; background: transparent; color: var(--gray-600); transition: all 0.2s;
-}
-.auth-tab.active {
-  background: white; color: var(--green-forest); font-weight: 700;
-  box-shadow: var(--shadow-sm);
-}
+.auth-tabs { display: flex; background: var(--gray-100); border-radius: var(--radius-md); padding: 4px; margin-bottom: 32px; }
+.auth-tab { flex: 1; padding: 10px; border: none; border-radius: calc(var(--radius-md) - 4px); font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; color: var(--gray-600); transition: all 0.2s; }
+.auth-tab.active { background: white; color: var(--green-forest); font-weight: 700; box-shadow: var(--shadow-sm); }
 
-/* ── Form headings ────────────────────────────────────────────────────────── */
-.form-heading {
-  font-family: var(--font-display); font-size: 30px; font-weight: 700;
-  color: var(--green-darkest); margin-bottom: 6px;
-}
+.form-heading { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--green-darkest); margin-bottom: 6px; }
 .form-subheading { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
-
-/* ── Alerts ───────────────────────────────────────────────────────────────── */
-.alert { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 18px; }
-.alert-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-.alert-warning {
-  background: #fffbeb; color: #92400e; border: 1px solid #fde68a;
-  display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
-}
-.btn-inline-link {
-  background: none; border: none; cursor: pointer;
-  color: var(--green-forest); font-size: 13px; font-weight: 600;
-  padding: 0; text-decoration: underline; text-underline-offset: 2px;
-  margin-left: 4px;
-}
-.btn-inline-link:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
-
-/* ── Gmail input ──────────────────────────────────────────────────────────── */
-.gmail-input-wrap { position: relative; }
-.gmail-badge {
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex; align-items: center; gap: 5px;
-  background: #f1f3f4; color: #5f6368;
-  font-size: 11px; font-weight: 600;
-  padding: 3px 8px; border-radius: 4px;
-  pointer-events: none; z-index: 1; white-space: nowrap;
-}
-.gmail-input { padding-right: 108px !important; }
+.form-group { margin-bottom: 18px; }
+.form-label { font-size: 11px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.6px; display: block; margin-bottom: 6px; }
+.form-control { width: 100%; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; padding: 10px 13px; transition: border-color 0.2s, box-shadow 0.2s; color: #1a1a1a; background: #fafafa; font-family: var(--font-body); }
+.form-control:focus { border-color: var(--green-primary); outline: none; box-shadow: 0 0 0 3px rgba(0,153,0,0.1); background: #fff; }
 .field-hint { font-size: 11px; color: var(--gray-400); margin-top: 5px; display: block; }
 
-/* ── Password toggle ──────────────────────────────────────────────────────── */
+.alert { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 18px; }
+.alert-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+.btn-inline-link { background: none; border: none; cursor: pointer; color: var(--green-forest); font-size: 13px; font-weight: 600; padding: 0; text-decoration: underline; text-underline-offset: 2px; margin-left: 4px; }
+.btn-inline-link:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
+
 .input-wrap { position: relative; }
 .input-wrap .form-control { padding-right: 44px; }
-.pw-toggle {
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none; cursor: pointer;
-  color: var(--gray-400); padding: 4px;
-  display: flex; align-items: center;
-}
+.pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 4px; display: flex; align-items: center; }
 .pw-toggle:hover { color: var(--green-primary); }
 
-/* ── Role cards ───────────────────────────────────────────────────────────── */
 .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.role-card {
-  border: 2px solid var(--gray-200); border-radius: var(--radius-md);
-  padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center;
-}
+.role-card { border: 2px solid var(--gray-200); border-radius: var(--radius-md); padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
 .role-card:hover { border-color: var(--green-light); }
 .role-card.active { border-color: var(--green-primary); background: var(--green-pale); }
-.rc-icon {
-  display: flex; align-items: center; justify-content: center;
-  width: 52px; height: 52px; border-radius: var(--radius-sm);
-  background: var(--gray-100); color: var(--gray-500);
-  margin: 0 auto 10px; transition: all 0.2s;
-}
+.rc-icon { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: var(--radius-sm); background: var(--gray-100); color: var(--gray-500); margin: 0 auto 10px; transition: all 0.2s; }
 .role-card:hover .rc-icon { background: var(--green-pale); color: var(--green-forest); }
 .role-card.active .rc-icon { background: var(--green-primary); color: white; }
 .rc-title { font-weight: 700; font-size: 14px; color: var(--gray-800); }
 .rc-desc  { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
 
-/* ── Buttons ──────────────────────────────────────────────────────────────── */
 .w-full { width: 100%; justify-content: center; }
+.btn { font-family: var(--font-body); font-weight: 600; border-radius: 8px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px; border: none; cursor: pointer; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(135deg, #009900, #006600); color: #fff; box-shadow: 0 3px 10px rgba(0,153,0,0.3); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,153,0,0.38); }
+
 .switch-text { text-align: center; margin-top: 20px; font-size: 14px; color: var(--gray-600); }
 .switch-text a { color: var(--green-primary); font-weight: 600; text-decoration: none; }
 .switch-text a:hover { text-decoration: underline; }
 
-/* ── Verification waiting screen ──────────────────────────────────────────── */
 .verify-waiting { display: flex; flex-direction: column; align-items: center; text-align: center; }
-
-.verify-icon-wrap {
-  position: relative; width: 80px; height: 80px;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 20px;
-}
-.verify-icon-ring {
-  width: 72px; height: 72px; border-radius: 50%;
-  background: linear-gradient(135deg, #ea4335 0%, #fbbc05 100%);
-  display: flex; align-items: center; justify-content: center;
-  color: white; position: relative; z-index: 1;
-  box-shadow: 0 8px 24px rgba(234,67,53,0.35);
-}
-.verify-pulse {
-  position: absolute; inset: -6px; border-radius: 50%;
-  border: 2px solid rgba(234, 67, 53, 0.3);
-  animation: verifyPulse 2s ease-out infinite;
-}
-@keyframes verifyPulse {
-  0%   { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
+.verify-icon-wrap { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.verify-icon-ring { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #ea4335 0%, #fbbc05 100%); display: flex; align-items: center; justify-content: center; color: white; position: relative; z-index: 1; box-shadow: 0 8px 24px rgba(234,67,53,0.35); }
+.verify-pulse { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(234,67,53,0.3); animation: verifyPulse 2s ease-out infinite; }
+@keyframes verifyPulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 .verify-desc { font-size: 15px; color: var(--gray-700); margin-bottom: 8px; line-height: 1.6; }
 .verify-email { color: var(--green-forest); word-break: break-all; }
 .verify-subdesc { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; line-height: 1.6; }
 
-/* ── Instructions box ─────────────────────────────────────────────────────── */
-.instructions-box {
-  width: 100%;
-  background: #f0fdf4;
-  border: 1.5px solid #86efac;
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  text-align: left;
-}
-.instructions-label {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: #166534; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  margin-bottom: 10px;
-}
-.instructions-list {
-  margin: 0; padding-left: 18px;
-  font-size: 13px; color: var(--gray-700);
-  line-height: 1.8;
-}
+.instructions-box { width: 100%; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 20px; text-align: left; }
+.instructions-label { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #166534; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.instructions-list { margin: 0; padding-left: 18px; font-size: 13px; color: var(--gray-700); line-height: 1.8; }
 .instructions-list strong { color: var(--green-forest); }
 
-/* ── Resend / change ──────────────────────────────────────────────────────── */
 .verify-actions { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 16px; }
-.btn-link {
-  background: none; border: none; cursor: pointer;
-  color: var(--green-primary); font-size: 13px; font-weight: 600;
-  padding: 0; text-decoration: underline; text-underline-offset: 2px;
-  transition: opacity 0.2s;
-}
+.btn-link { background: none; border: none; cursor: pointer; color: var(--green-primary); font-size: 13px; font-weight: 600; padding: 0; text-decoration: underline; text-underline-offset: 2px; transition: opacity 0.2s; }
 .btn-link:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
 .sep { color: var(--gray-400); }
 
-/* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .auth-page { grid-template-columns: 1fr; min-height: 100svh; }
   .auth-left { display: none; }
