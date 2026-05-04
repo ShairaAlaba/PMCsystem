@@ -3,7 +3,9 @@
     <div class="auth-left" :style="`--bg-img: url('${libSketch}')`">
       <div class="auth-left-inner">
         <router-link to="/" class="back-link">
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
           Back to Home
         </router-link>
         <div class="brand">
@@ -29,11 +31,13 @@
       <div class="auth-form-wrap">
         <!-- Tabs -->
         <div class="auth-tabs">
-          <button class="auth-tab" :class="{active: mode === 'login'}" @click="switchToLogin">Sign In</button>
-          <button class="auth-tab" :class="{active: mode === 'register'}" @click="switchToRegister">Create Account</button>
+          <button class="auth-tab" :class="{ active: mode === 'login' }" @click="switchToLogin">Sign In</button>
+          <button class="auth-tab" :class="{ active: mode === 'register' }" @click="switchToRegister">Create Account</button>
         </div>
 
-        <!-- LOGIN -->
+        <!-- ═══════════════════════════════════════════
+             LOGIN
+        ════════════════════════════════════════════ -->
         <div v-if="mode === 'login'" class="auth-form animate-fadeUp">
           <h2 class="form-heading">Welcome back</h2>
           <p class="form-subheading">Sign in to your account to continue</p>
@@ -49,7 +53,13 @@
                 </svg>
                 @gmail.com
               </span>
-              <input v-model="loginData.email" type="email" class="form-control gmail-input" placeholder="yourname@gmail.com" />
+              <input
+                v-model="loginData.email"
+                type="email"
+                class="form-control gmail-input"
+                placeholder="yourname@gmail.com"
+                @keyup.enter="doLogin"
+              />
             </div>
             <span class="field-hint">Only Gmail accounts are accepted</span>
           </div>
@@ -57,12 +67,36 @@
           <div class="form-group">
             <label class="form-label">Password</label>
             <div class="input-wrap">
-              <input v-model="loginData.password" :type="showPw ? 'text' : 'password'" class="form-control" placeholder="••••••••" />
-              <button class="pw-toggle" @click="showPw = !showPw">
-                <svg v-if="!showPw" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <svg v-else width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+              <input
+                v-model="loginData.password"
+                :type="showPw ? 'text' : 'password'"
+                class="form-control"
+                placeholder="••••••••"
+                @keyup.enter="doLogin"
+              />
+              <button class="pw-toggle" @click="showPw = !showPw" type="button">
+                <svg v-if="!showPw" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <svg v-else width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
               </button>
             </div>
+          </div>
+
+          <!-- Email-not-verified warning shown after login attempt -->
+          <div v-if="needsVerification" class="alert alert-warning">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <span>
+              Please verify your Gmail first.
+              <button class="btn-inline-link" @click="resendVerificationFromLogin" :disabled="resendCooldown > 0">
+                {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend email' }}
+              </button>
+            </span>
           </div>
 
           <button class="btn btn-primary w-full" @click="doLogin" :disabled="loading">
@@ -72,10 +106,13 @@
           <p class="switch-text">Don't have an account? <a href="#" @click.prevent="switchToRegister">Create one</a></p>
         </div>
 
-        <!-- REGISTER STEP 1 — Info -->
+        <!-- ═══════════════════════════════════════════
+             REGISTER — Step 1: Fill in info
+        ════════════════════════════════════════════ -->
         <div v-if="mode === 'register' && step === 1" class="auth-form animate-fadeUp">
           <h2 class="form-heading">Create Account</h2>
           <p class="form-subheading">Step 1 of 2 — Your Information</p>
+
           <div v-if="error" class="alert alert-error">{{ error }}</div>
 
           <div class="form-group">
@@ -100,18 +137,29 @@
           <div class="form-group">
             <label class="form-label">Password</label>
             <div class="input-wrap">
-              <input v-model="regData.password" :type="showPw ? 'text' : 'password'" class="form-control" placeholder="Min 8 characters" />
-              <button class="pw-toggle" @click="showPw = !showPw">
-                <svg v-if="!showPw" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <svg v-else width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+              <input
+                v-model="regData.password"
+                :type="showPw ? 'text' : 'password'"
+                class="form-control"
+                placeholder="Min 6 characters"
+              />
+              <button class="pw-toggle" @click="showPw = !showPw" type="button">
+                <svg v-if="!showPw" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <svg v-else width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
               </button>
             </div>
+            <span class="field-hint">Firebase requires at least 6 characters</span>
           </div>
 
           <div class="form-group">
             <label class="form-label">I am a...</label>
             <div class="role-cards">
-              <div class="role-card" :class="{active: regData.role === 'inspector'}" @click="regData.role = 'inspector'">
+              <div class="role-card" :class="{ active: regData.role === 'inspector' }" @click="regData.role = 'inspector'">
                 <div class="rc-icon">
                   <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="7" stroke-width="2" stroke-linecap="round"/>
@@ -120,36 +168,38 @@
                   </svg>
                 </div>
                 <div class="rc-title">Inspector</div>
-                <div class="rc-desc">Record & manage checklists</div>
+                <div class="rc-desc">Record &amp; manage checklists</div>
               </div>
-              <div class="role-card" :class="{active: regData.role === 'admin'}" @click="regData.role = 'admin'">
+              <div class="role-card" :class="{ active: regData.role === 'admin' }" @click="regData.role = 'admin'">
                 <div class="rc-icon">
                   <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                   </svg>
                 </div>
                 <div class="rc-title">Admin</div>
-                <div class="rc-desc">View reports & manage users</div>
+                <div class="rc-desc">View reports &amp; manage users</div>
               </div>
             </div>
           </div>
 
-          <button class="btn btn-primary w-full" @click="goStep2" :disabled="loading">
+          <button class="btn btn-primary w-full" @click="doRegister" :disabled="loading">
             <span v-if="loading" class="spinner"></span>
-            <span v-else>Continue — Send Verification Link</span>
+            <span v-else>Create Account &amp; Send Verification</span>
           </button>
           <p class="switch-text">Already have an account? <a href="#" @click.prevent="switchToLogin">Sign in</a></p>
         </div>
 
-        <!-- REGISTER STEP 2 — Waiting for email verification -->
+        <!-- ═══════════════════════════════════════════
+             REGISTER — Step 2: Check email
+        ════════════════════════════════════════════ -->
         <div v-if="mode === 'register' && step === 2" class="auth-form animate-fadeUp">
           <h2 class="form-heading">Check Your Gmail</h2>
           <p class="form-subheading">Step 2 of 2 — Verify your email address</p>
 
           <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-          <!-- Email sent state -->
-          <div v-if="!verified" class="verify-waiting">
+          <div class="verify-waiting">
+            <!-- Animated Gmail icon -->
             <div class="verify-icon-wrap">
               <div class="verify-icon-ring">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -160,177 +210,81 @@
             </div>
 
             <p class="verify-desc">
-              A verification link has been sent to<br>
+              A verification link has been sent to<br />
               <strong class="verify-email">{{ regData.email }}</strong>
             </p>
-            <p class="verify-subdesc">Click the link in your Gmail inbox to confirm your account. This page will update automatically once verified.</p>
+            <p class="verify-subdesc">
+              Open your Gmail inbox and click the verification link. Once you've verified,
+              come back here and click <strong>I've verified my email</strong> below.
+            </p>
 
-            <!-- Simulated link for demo (no real backend) -->
-            <div class="demo-link-box">
-              <div class="demo-link-label">
-                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Demo mode — click this simulated link from your inbox:
+            <!-- Instructions box -->
+            <div class="instructions-box">
+              <div class="instructions-label">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                What to do
               </div>
-              <button class="demo-verify-btn" @click="simulateEmailClick">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                ✉ Verify my Gmail — {{ regData.email }}
-              </button>
+              <ol class="instructions-list">
+                <li>Open Gmail and find the email from <strong>noreply@pmcsystem.firebaseapp.com</strong></li>
+                <li>Click the <strong>"Verify email address"</strong> link inside it</li>
+                <li>Return here and press the button below</li>
+              </ol>
             </div>
 
-            <div class="verify-status">
-              <span class="pulse-dot"></span>
-              Waiting for verification…
-            </div>
+            <!-- Manual "I verified" button — user clicks after clicking link in email -->
+            <button class="btn btn-primary w-full" @click="checkVerifiedAndLogin" :disabled="loading">
+              <span v-if="loading" class="spinner"></span>
+              <span v-else>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:-3px;margin-right:6px">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                I've verified my email — Sign me in
+              </span>
+            </button>
 
             <div class="verify-actions">
-              <button class="btn-link" @click="resendLink" :disabled="resendCooldown > 0">
+              <button class="btn-link" @click="resendVerificationFromRegister" :disabled="resendCooldown > 0">
                 {{ resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend verification link' }}
               </button>
               <span class="sep">·</span>
-              <button class="btn-link" @click="step = 1">Change email</button>
+              <button class="btn-link" @click="backToStep1">Change email</button>
             </div>
-          </div>
-
-          <!-- Verified success state -->
-          <div v-else class="verify-success">
-            <div class="success-icon">
-              <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <h3 class="success-title">Gmail Verified!</h3>
-            <p class="success-desc">Your account has been created successfully. Signing you in…</p>
-            <div class="spinner-center"><span class="spinner"></span></div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import pmcLogo from '@/assets/pmclogo.png'
 import libSketch from '@/assets/libsketch.png'
 
-const router = useRouter()
-const auth = useAuthStore()
+const router   = useRouter()
+const authStore = useAuthStore()
 
-const mode = ref('login')
-const step = ref(1)
-const loading = ref(false)
-const error = ref('')
-const showPw = ref(false)
-const verified = ref(false)
-const resendCooldown = ref(0)
-const pendingToken = ref('')
+// ─── UI state ───────────────────────────────────────────────────────────────
+const mode             = ref('login')
+const step             = ref(1)
+const loading          = ref(false)
+const error            = ref('')
+const showPw           = ref(false)
+const needsVerification = ref(false)   // shown on login when email unverified
+const resendCooldown   = ref(0)
 
+// ─── Form data ───────────────────────────────────────────────────────────────
 const loginData = ref({ email: '', password: '' })
-const regData = ref({ name: '', email: '', password: '', role: 'inspector' })
+const regData   = ref({ name: '', email: '', password: '', role: 'inspector' })
 
-let pollInterval = null
+// ─── Cooldown timer ──────────────────────────────────────────────────────────
 let cooldownTimer = null
 
-function switchToLogin() {
-  stopPolling()
-  mode.value = 'login'
-  step.value = 1
-  error.value = ''
-}
-
-function switchToRegister() {
-  stopPolling()
-  mode.value = 'register'
-  step.value = 1
-  error.value = ''
-}
-
-// ─── Gmail validation ───────────────────────────────────────────────────────
-function isGmail(email) {
-  return /^[a-zA-Z0-9._%+\-]+@gmail\.com$/.test(email.trim().toLowerCase())
-}
-
-// ─── Login ──────────────────────────────────────────────────────────────────
-async function doLogin() {
-  error.value = ''
-  if (!loginData.value.email || !loginData.value.password) {
-    error.value = 'Please fill in all fields.'; return
-  }
-  if (!isGmail(loginData.value.email)) {
-    error.value = 'Only Gmail accounts (@gmail.com) are allowed.'; return
-  }
-  loading.value = true
-  await new Promise(r => setTimeout(r, 600))
-  const res = auth.login(loginData.value.email, loginData.value.password)
-  loading.value = false
-  if (!res.success) { error.value = res.error; return }
-  router.push(res.role === 'admin' ? '/admin' : '/inspector')
-}
-
-// ─── Register Step 1 → Step 2 ───────────────────────────────────────────────
-async function goStep2() {
-  error.value = ''
-  if (!regData.value.name.trim()) { error.value = 'Please enter your full name.'; return }
-  if (!regData.value.email) { error.value = 'Please enter your Gmail address.'; return }
-  if (!isGmail(regData.value.email)) {
-    error.value = 'Only Gmail accounts (@gmail.com) are allowed to register.'; return
-  }
-  if (regData.value.password.length < 8) { error.value = 'Password must be at least 8 characters.'; return }
-  if (!regData.value.role) { error.value = 'Please select a role.'; return }
-
-  loading.value = true
-  await new Promise(r => setTimeout(r, 800))
-
-  const res = auth.sendVerificationLink({
-    name: regData.value.name,
-    email: regData.value.email,
-    password: regData.value.password,
-    role: regData.value.role,
-  })
-
-  loading.value = false
-
-  if (!res.success) { error.value = res.error; return }
-
-  pendingToken.value = res.token
-  step.value = 2
-  startPolling()
-  startResendCooldown()
-}
-
-// ─── Simulate clicking the email link (demo only) ────────────────────────────
-function simulateEmailClick() {
-  const res = auth.verifyAndRegister(pendingToken.value)
-  if (!res.success) { error.value = res.error; return }
-  // polling will pick this up automatically
-}
-
-// ─── Poll localStorage for verification ─────────────────────────────────────
-function startPolling() {
-  stopPolling()
-  pollInterval = setInterval(() => {
-    if (auth.checkVerified(pendingToken.value)) {
-      verified.value = true
-      stopPolling()
-      auth.clearVerifiedFlag()
-      // Auto-login and redirect after brief success display
-      setTimeout(() => {
-        const res = auth.login(regData.value.email, regData.value.password)
-        if (res.success) {
-          router.push(res.role === 'admin' ? '/admin' : '/inspector')
-        }
-      }, 1800)
-    }
-  }, 800)
-}
-
-function stopPolling() {
-  if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
-}
-
-// ─── Resend cooldown ─────────────────────────────────────────────────────────
 function startResendCooldown(seconds = 60) {
   resendCooldown.value = seconds
   clearInterval(cooldownTimer)
@@ -340,35 +294,174 @@ function startResendCooldown(seconds = 60) {
   }, 1000)
 }
 
-async function resendLink() {
-  if (resendCooldown.value > 0) return
+// ─── Tab switching ───────────────────────────────────────────────────────────
+function switchToLogin() {
+  mode.value  = 'login'
+  step.value  = 1
   error.value = ''
+  needsVerification.value = false
+}
+
+function switchToRegister() {
+  mode.value  = 'register'
+  step.value  = 1
+  error.value = ''
+  needsVerification.value = false
+}
+
+function backToStep1() {
+  step.value  = 1
+  error.value = ''
+}
+
+// ─── Gmail validation ────────────────────────────────────────────────────────
+function isGmail(email) {
+  return /^[a-zA-Z0-9._%+\-]+@gmail\.com$/.test(email.trim().toLowerCase())
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+// Calls authStore.login() which must:
+//   1. signInWithEmailAndPassword(auth, email, password)
+//   2. Check firebaseUser.emailVerified — if false, sign out and return { success: false, needsVerification: true }
+//   3. Fetch the user's role from Firestore (users/{uid}.role)
+//   4. Set pinia state and return { success: true, role }
+async function doLogin() {
+  error.value             = ''
+  needsVerification.value = false
+
+  if (!loginData.value.email || !loginData.value.password) {
+    error.value = 'Please fill in all fields.'
+    return
+  }
+  if (!isGmail(loginData.value.email)) {
+    error.value = 'Only Gmail accounts (@gmail.com) are allowed.'
+    return
+  }
+
   loading.value = true
-  await new Promise(r => setTimeout(r, 700))
-  const res = auth.sendVerificationLink({
-    name: regData.value.name,
-    email: regData.value.email,
+  const res = await authStore.login(loginData.value.email, loginData.value.password)
+  loading.value = false
+
+  if (!res.success) {
+    if (res.needsVerification) {
+      needsVerification.value = true
+      // Store email so resend works
+      regData.value.email    = loginData.value.email
+      regData.value.password = loginData.value.password
+    } else {
+      error.value = res.error
+    }
+    return
+  }
+
+  router.push(res.role === 'admin' ? '/admin' : '/inspector')
+}
+
+// ─── REGISTER — Step 1 ───────────────────────────────────────────────────────
+// Calls authStore.register() which must:
+//   1. createUserWithEmailAndPassword(auth, email, password)
+//   2. sendEmailVerification(firebaseUser)
+//   3. Write { name, email, role, createdAt } to Firestore users/{uid}
+//   4. Sign the user OUT so they can't access the app until verified
+//   5. Return { success: true } or { success: false, error: 'message' }
+async function doRegister() {
+  error.value = ''
+
+  if (!regData.value.name.trim())       { error.value = 'Please enter your full name.'; return }
+  if (!regData.value.email)             { error.value = 'Please enter your Gmail address.'; return }
+  if (!isGmail(regData.value.email))    { error.value = 'Only Gmail accounts (@gmail.com) are allowed.'; return }
+  if (regData.value.password.length < 6){ error.value = 'Password must be at least 6 characters.'; return }
+  if (!regData.value.role)              { error.value = 'Please select a role.'; return }
+
+  loading.value = true
+  const res = await authStore.register({
+    name:     regData.value.name,
+    email:    regData.value.email,
     password: regData.value.password,
-    role: regData.value.role,
+    role:     regData.value.role,
   })
   loading.value = false
-  if (!res.success) { error.value = res.error; return }
-  pendingToken.value = res.token
+
+  if (!res.success) {
+    error.value = res.error
+    return
+  }
+
+  // Move to step 2 — user must click link in Gmail
+  step.value = 2
   startResendCooldown()
 }
 
-onUnmounted(() => {
-  stopPolling()
-  clearInterval(cooldownTimer)
-})
+// ─── REGISTER — Step 2: User clicked link, now sign them in ─────────────────
+// Calls authStore.loginAfterVerification() which must:
+//   1. signInWithEmailAndPassword(auth, email, password)
+//   2. reload the user (firebaseUser.reload())
+//   3. Check firebaseUser.emailVerified — if still false return { success: false, error: '...' }
+//   4. Fetch role from Firestore and set pinia state
+//   5. Return { success: true, role }
+async function checkVerifiedAndLogin() {
+  error.value   = ''
+  loading.value = true
+
+  const res = await authStore.loginAfterVerification(
+    regData.value.email,
+    regData.value.password
+  )
+  loading.value = false
+
+  if (!res.success) {
+    error.value = res.error
+    return
+  }
+
+  router.push(res.role === 'admin' ? '/admin' : '/inspector')
+}
+
+// ─── Resend verification (from Step 2 register screen) ──────────────────────
+// Calls authStore.resendVerificationEmail() which must:
+//   1. signInWithEmailAndPassword temporarily
+//   2. sendEmailVerification(firebaseUser)
+//   3. Sign out again
+//   4. Return { success: true } or { success: false, error }
+async function resendVerificationFromRegister() {
+  if (resendCooldown.value > 0) return
+  error.value   = ''
+  loading.value = true
+  const res = await authStore.resendVerificationEmail(
+    regData.value.email,
+    regData.value.password
+  )
+  loading.value = false
+  if (!res.success) { error.value = res.error; return }
+  startResendCooldown()
+}
+
+// ─── Resend verification (from Login screen warning) ─────────────────────────
+async function resendVerificationFromLogin() {
+  if (resendCooldown.value > 0) return
+  error.value   = ''
+  loading.value = true
+  const res = await authStore.resendVerificationEmail(
+    regData.value.email,   // populated when needsVerification fires
+    regData.value.password
+  )
+  loading.value = false
+  if (!res.success) { error.value = res.error; return }
+  startResendCooldown()
+}
+
+onUnmounted(() => clearInterval(cooldownTimer))
 </script>
 
 <style scoped>
+/* ── Layout ───────────────────────────────────────────────────────────────── */
 .auth-page {
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
 }
+
+/* ── Left panel ───────────────────────────────────────────────────────────── */
 .auth-left {
   background: var(--green-darkest);
   position: relative;
@@ -408,7 +501,6 @@ onUnmounted(() => {
 .brand-logo-img { width: 48px; height: 48px; object-fit: contain; }
 .brand-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: white; }
 .brand-sub { font-size: 12px; color: rgba(255,255,255,0.45); }
-
 .auth-illustration {
   display: flex; align-items: center; justify-content: center;
   margin: 32px 0; padding: 0 10px;
@@ -421,9 +513,11 @@ onUnmounted(() => {
 .auth-quote { color: rgba(255,255,255,0.55); font-style: italic; font-size: 16px; font-family: var(--font-display); }
 .auth-quote-sub { font-size: 12px; font-style: normal; margin-top: 4px; color: var(--green-primary); }
 
-/* Right Panel */
+/* ── Right panel ──────────────────────────────────────────────────────────── */
 .auth-right { display: flex; align-items: center; justify-content: center; background: white; padding: 40px; }
 .auth-form-wrap { width: 100%; max-width: 420px; }
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
 .auth-tabs {
   display: flex; background: var(--gray-100);
   border-radius: var(--radius-md); padding: 4px; margin-bottom: 32px;
@@ -438,28 +532,44 @@ onUnmounted(() => {
   background: white; color: var(--green-forest); font-weight: 700;
   box-shadow: var(--shadow-sm);
 }
+
+/* ── Form headings ────────────────────────────────────────────────────────── */
 .form-heading {
   font-family: var(--font-display); font-size: 30px; font-weight: 700;
   color: var(--green-darkest); margin-bottom: 6px;
 }
 .form-subheading { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
 
-/* Gmail input styling */
+/* ── Alerts ───────────────────────────────────────────────────────────────── */
+.alert { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 18px; }
+.alert-error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.alert-warning {
+  background: #fffbeb; color: #92400e; border: 1px solid #fde68a;
+  display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+}
+.btn-inline-link {
+  background: none; border: none; cursor: pointer;
+  color: var(--green-forest); font-size: 13px; font-weight: 600;
+  padding: 0; text-decoration: underline; text-underline-offset: 2px;
+  margin-left: 4px;
+}
+.btn-inline-link:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
+
+/* ── Gmail input ──────────────────────────────────────────────────────────── */
 .gmail-input-wrap { position: relative; }
 .gmail-badge {
-  position: absolute;
-  right: 12px; top: 50%;
+  position: absolute; right: 12px; top: 50%;
   transform: translateY(-50%);
   display: inline-flex; align-items: center; gap: 5px;
-  background: #f1f3f4;
-  color: #5f6368; font-size: 11px; font-weight: 600;
+  background: #f1f3f4; color: #5f6368;
+  font-size: 11px; font-weight: 600;
   padding: 3px 8px; border-radius: 4px;
-  pointer-events: none; z-index: 1;
-  white-space: nowrap;
+  pointer-events: none; z-index: 1; white-space: nowrap;
 }
 .gmail-input { padding-right: 108px !important; }
 .field-hint { font-size: 11px; color: var(--gray-400); margin-top: 5px; display: block; }
 
+/* ── Password toggle ──────────────────────────────────────────────────────── */
 .input-wrap { position: relative; }
 .input-wrap .form-control { padding-right: 44px; }
 .pw-toggle {
@@ -471,6 +581,7 @@ onUnmounted(() => {
 }
 .pw-toggle:hover { color: var(--green-primary); }
 
+/* ── Role cards ───────────────────────────────────────────────────────────── */
 .role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .role-card {
   border: 2px solid var(--gray-200); border-radius: var(--radius-md);
@@ -487,14 +598,15 @@ onUnmounted(() => {
 .role-card:hover .rc-icon { background: var(--green-pale); color: var(--green-forest); }
 .role-card.active .rc-icon { background: var(--green-primary); color: white; }
 .rc-title { font-weight: 700; font-size: 14px; color: var(--gray-800); }
-.rc-desc { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
+.rc-desc  { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
 
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
 .w-full { width: 100%; justify-content: center; }
 .switch-text { text-align: center; margin-top: 20px; font-size: 14px; color: var(--gray-600); }
 .switch-text a { color: var(--green-primary); font-weight: 600; text-decoration: none; }
 .switch-text a:hover { text-decoration: underline; }
 
-/* ── Verification Waiting Screen ──────────────────────────────────────────── */
+/* ── Verification waiting screen ──────────────────────────────────────────── */
 .verify-waiting { display: flex; flex-direction: column; align-items: center; text-align: center; }
 
 .verify-icon-wrap {
@@ -515,59 +627,38 @@ onUnmounted(() => {
   animation: verifyPulse 2s ease-out infinite;
 }
 @keyframes verifyPulse {
-  0% { transform: scale(1); opacity: 1; }
+  0%   { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.5); opacity: 0; }
 }
-
 .verify-desc { font-size: 15px; color: var(--gray-700); margin-bottom: 8px; line-height: 1.6; }
 .verify-email { color: var(--green-forest); word-break: break-all; }
-.verify-subdesc { font-size: 13px; color: var(--gray-500); margin-bottom: 24px; line-height: 1.6; }
+.verify-subdesc { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; line-height: 1.6; }
 
-/* Demo link box */
-.demo-link-box {
+/* ── Instructions box ─────────────────────────────────────────────────────── */
+.instructions-box {
   width: 100%;
-  background: #fffbf0;
-  border: 1.5px dashed #f5a623;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
   border-radius: var(--radius-md);
   padding: 14px 16px;
   margin-bottom: 20px;
+  text-align: left;
 }
-.demo-link-label {
+.instructions-label {
   display: flex; align-items: center; gap: 6px;
-  font-size: 11px; color: #9a7200; font-weight: 600;
+  font-size: 11px; color: #166534; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.5px;
   margin-bottom: 10px;
 }
-.demo-verify-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: white;
-  border: 1.5px solid #ea4335;
-  color: #ea4335;
-  border-radius: 6px;
-  padding: 9px 14px;
-  font-size: 13px; font-weight: 600;
-  cursor: pointer; width: 100%;
-  transition: all 0.2s;
+.instructions-list {
+  margin: 0; padding-left: 18px;
+  font-size: 13px; color: var(--gray-700);
+  line-height: 1.8;
 }
-.demo-verify-btn:hover { background: #fef2f2; border-color: #c0392b; }
+.instructions-list strong { color: var(--green-forest); }
 
-/* Waiting status */
-.verify-status {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--gray-500);
-  margin-bottom: 20px;
-}
-.pulse-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--green-primary);
-  animation: pulseDot 1.4s ease-in-out infinite;
-}
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.7); }
-}
-
-.verify-actions { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+/* ── Resend / change ──────────────────────────────────────────────────────── */
+.verify-actions { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 16px; }
 .btn-link {
   background: none; border: none; cursor: pointer;
   color: var(--green-primary); font-size: 13px; font-weight: 600;
@@ -576,27 +667,6 @@ onUnmounted(() => {
 }
 .btn-link:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
 .sep { color: var(--gray-400); }
-
-/* ── Verified Success State ───────────────────────────────────────────────── */
-.verify-success {
-  display: flex; flex-direction: column; align-items: center;
-  text-align: center; padding: 24px 0;
-}
-.success-icon {
-  width: 80px; height: 80px; border-radius: 50%;
-  background: var(--green-pale);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--green-primary);
-  margin-bottom: 20px;
-  animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes successPop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.success-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--green-darkest); margin-bottom: 8px; }
-.success-desc { font-size: 14px; color: var(--gray-500); margin-bottom: 24px; }
-.spinner-center { display: flex; justify-content: center; }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -609,6 +679,5 @@ onUnmounted(() => {
 }
 @media (max-width: 400px) {
   .role-cards { grid-template-columns: 1fr; }
-
 }
 </style>

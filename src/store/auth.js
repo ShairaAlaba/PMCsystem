@@ -1,187 +1,203 @@
+// src/store/auth.js
 import { defineStore } from 'pinia'
+import { db, auth } from '../firebase'
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  signOut,
+  onAuthStateChanged,
+} from 'firebase/auth'
+import {
+  collection, addDoc, getDocs,
+  query, where, updateDoc, doc
+} from 'firebase/firestore'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('pmc_user') || 'null'),
-    accounts: JSON.parse(localStorage.getItem('pmc_accounts') || '[]'),
-    onlineLogs: JSON.parse(localStorage.getItem('pmc_online_logs') || '[]'),
   }),
 
   getters: {
-    isLoggedIn: (state) => !!state.user,
-    isAdmin: (state) => state.user?.role === 'admin',
-    isInspector: (state) => state.user?.role === 'inspector',
-    currentUser: (state) => state.user,
+    isLoggedIn:  (s) => !!s.user,
+    isAdmin:     (s) => s.user?.role === 'admin',
+    isInspector: (s) => s.user?.role === 'inspector',
+    currentUser: (s) => s.user,
   },
 
   actions: {
-    saveAccounts() {
-      localStorage.setItem('pmc_accounts', JSON.stringify(this.accounts))
-    },
+
     saveUser() {
       localStorage.setItem('pmc_user', JSON.stringify(this.user))
     },
-    saveLogs() {
-      localStorage.setItem('pmc_online_logs', JSON.stringify(this.onlineLogs))
-    },
 
-    /**
-     * Validates that the email is a real Gmail address.
-     */
-    isGmailAddress(email) {
-      return /^[a-zA-Z0-9._%+\-]+@gmail\.com$/.test(email.trim().toLowerCase())
-    },
-
-    /**
-     * Sends a verification link (simulated).
-     * Stores a pending verification token in localStorage.
-     * Returns the token so AuthPage can construct the simulated link.
-     */
-    sendVerificationLink({ name, email, password, role }) {
-      if (!this.isGmailAddress(email)) {
-        return { success: false, error: 'Only Gmail accounts (@gmail.com) are allowed.' }
-      }
-
-      const exists = this.accounts.find(a => a.email === email)
-      if (exists) return { success: false, error: 'This Gmail address is already registered.' }
-
-      // Generate a unique token
-      const token = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-
-      // Store pending registration data
-      const pending = { name, email, password, role, token, createdAt: Date.now() }
-      localStorage.setItem('pmc_pending_verification', JSON.stringify(pending))
-
-      return { success: true, token }
-    },
-
-    /**
-     * Called when the user clicks the verification link.
-     * Reads the pending token from localStorage and completes registration.
-     */
-    verifyAndRegister(token) {
-      const raw = localStorage.getItem('pmc_pending_verification')
-      if (!raw) return { success: false, error: 'No pending verification found. Please register again.' }
-
-      let pending
-      try { pending = JSON.parse(raw) } catch {
-        return { success: false, error: 'Verification data is corrupted. Please register again.' }
-      }
-
-      if (pending.token !== token) {
-        return { success: false, error: 'Invalid or expired verification link.' }
-      }
-
-      // Token expires after 15 minutes
-      if (Date.now() - pending.createdAt > 15 * 60 * 1000) {
-        localStorage.removeItem('pmc_pending_verification')
-        return { success: false, error: 'Verification link has expired. Please register again.' }
-      }
-
-      const exists = this.accounts.find(a => a.email === pending.email)
-      if (exists) {
-        localStorage.removeItem('pmc_pending_verification')
-        return { success: false, error: 'This email is already registered.' }
-      }
-
-      const account = {
-        id: Date.now().toString(),
-        name: pending.name,
-        email: pending.email,
-        password: pending.password,
-        role: pending.role,
-        createdAt: new Date().toISOString(),
-        isOnline: false,
-        lastLogin: null,
-        emailVerified: true,
-      }
-      this.accounts.push(account)
-      this.saveAccounts()
-
-      // Mark as verified so the polling page can proceed
-      localStorage.setItem('pmc_email_verified', token)
-      localStorage.removeItem('pmc_pending_verification')
-
-      return { success: true, role: account.role, email: account.email, password: pending.password }
-    },
-
-    /**
-     * Check if the pending verification has been completed.
-     * Used by the waiting screen to poll for completion.
-     */
-    checkVerified(token) {
-      const verified = localStorage.getItem('pmc_email_verified')
-      return verified === token
-    },
-
-    /**
-     * Clear the verified flag after it's been consumed.
-     */
-    clearVerifiedFlag() {
-      localStorage.removeItem('pmc_email_verified')
-    },
-
-    login(email, password) {
-      const account = this.accounts.find(a => a.email === email && a.password === password)
-      if (!account) return { success: false, error: 'Invalid email or password.' }
-
-      account.isOnline = true
-      account.lastLogin = new Date().toISOString()
-      this.user = { ...account }
-      this.saveAccounts()
-      this.saveUser()
-
-      this.onlineLogs.push({
-        userId: account.id,
-        userName: account.name,
-        email: account.email,
-        role: account.role,
-        loginTime: new Date().toISOString(),
-        logoutTime: null,
+    // ── INIT — call once in App.vue, awaits Firebase session restore ──────────
+    // Returns a Promise so App.vue can wait before showing any route.
+    init() {
+      return new Promise((resolve) => {
+        onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser && firebaseUser.emailVerified) {
+            // Re-fetch Firestore profile to get fresh role / name
+            try {
+              const q    = query(collection(db, 'users'), where('uid', '==', firebaseUser.uid))
+              const snap = await getDocs(q)
+              if (!snap.empty) {
+                const profile = { id: snap.docs[0].id, ...snap.docs[0].data() }
+                this.user = profile
+                this.saveUser()
+              } else {
+                // Profile missing — clear stale local storage
+                this.user = null
+                localStorage.removeItem('pmc_user')
+              }
+            } catch {
+              // Keep localStorage copy if Firestore fails (offline)
+            }
+          } else {
+            this.user = null
+            localStorage.removeItem('pmc_user')
+          }
+          resolve()   // ← router can now run
+        })
       })
-      this.saveLogs()
-
-      return { success: true, role: account.role }
     },
 
-    logout() {
-      if (this.user) {
-        const account = this.accounts.find(a => a.id === this.user.id)
-        if (account) {
-          account.isOnline = false
-          this.saveAccounts()
-        }
-        const log = [...this.onlineLogs].reverse().find(l => l.userId === this.user.id && !l.logoutTime)
-        if (log) {
-          log.logoutTime = new Date().toISOString()
-          this.saveLogs()
-        }
+    // ── REGISTER ──────────────────────────────────────────────────────────────
+    async register({ name, email, password, role }) {
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password)
+        await sendEmailVerification(cred.user)
+        await addDoc(collection(db, 'users'), {
+          uid:           cred.user.uid,
+          name,
+          email,
+          role,
+          isOnline:      false,
+          lastLogin:     null,
+          emailVerified: false,
+          createdAt:     new Date().toISOString(),
+        })
+        await signOut(auth)
+        return { success: true }
+      } catch (err) {
+        let msg = 'Registration failed. Please try again.'
+        if (err.code === 'auth/email-already-in-use') msg = 'This email is already registered. Please sign in.'
+        if (err.code === 'auth/weak-password')        msg = 'Password must be at least 6 characters.'
+        if (err.code === 'auth/invalid-email')        msg = 'Invalid email address.'
+        return { success: false, error: msg }
       }
+    },
+
+    // ── LOGIN ─────────────────────────────────────────────────────────────────
+    async login(email, password) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password)
+
+        if (!cred.user.emailVerified) {
+          await signOut(auth)
+          return { success: false, needsVerification: true }
+        }
+
+        const q    = query(collection(db, 'users'), where('uid', '==', cred.user.uid))
+        const snap = await getDocs(q)
+        if (snap.empty) {
+          await signOut(auth)
+          return { success: false, error: 'User profile not found. Please contact an administrator.' }
+        }
+
+        const profile = { id: snap.docs[0].id, ...snap.docs[0].data() }
+        await updateDoc(doc(db, 'users', profile.id), {
+          isOnline:      true,
+          emailVerified: true,
+          lastLogin:     new Date().toISOString(),
+        })
+
+        this.user = { ...profile, isOnline: true, emailVerified: true }
+        this.saveUser()
+        return { success: true, role: profile.role }
+
+      } catch (err) {
+        let msg = 'Invalid email or password.'
+        if (err.code === 'auth/too-many-requests')       msg = 'Too many attempts. Please wait and try again.'
+        if (err.code === 'auth/network-request-failed')  msg = 'Network error. Check your connection.'
+        return { success: false, error: msg }
+      }
+    },
+
+    // ── LOGIN AFTER VERIFICATION ──────────────────────────────────────────────
+    async loginAfterVerification(email, password) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password)
+        await cred.user.reload()
+
+        if (!cred.user.emailVerified) {
+          await signOut(auth)
+          return {
+            success: false,
+            error: 'Your email is not verified yet. Click the link in your Gmail inbox first, then try again.',
+          }
+        }
+
+        const q    = query(collection(db, 'users'), where('uid', '==', cred.user.uid))
+        const snap = await getDocs(q)
+        if (snap.empty) {
+          await signOut(auth)
+          return { success: false, error: 'User profile not found. Please contact an administrator.' }
+        }
+
+        const profile = { id: snap.docs[0].id, ...snap.docs[0].data() }
+        await updateDoc(doc(db, 'users', profile.id), {
+          isOnline:      true,
+          emailVerified: true,
+          lastLogin:     new Date().toISOString(),
+        })
+
+        this.user = { ...profile, isOnline: true, emailVerified: true }
+        this.saveUser()
+        return { success: true, role: profile.role }
+
+      } catch (err) {
+        let msg = 'Could not sign you in. Please check your email and password.'
+        if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Please wait and try again.'
+        return { success: false, error: msg }
+      }
+    },
+
+    // ── RESEND VERIFICATION EMAIL ─────────────────────────────────────────────
+    async resendVerificationEmail(email, password) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, password)
+        if (cred.user.emailVerified) {
+          await signOut(auth)
+          return { success: false, error: 'Your email is already verified. Please sign in normally.' }
+        }
+        await sendEmailVerification(cred.user)
+        await signOut(auth)
+        return { success: true }
+      } catch (err) {
+        let msg = 'Could not resend verification email. Please try again.'
+        if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Please wait a few minutes before resending.'
+        return { success: false, error: msg }
+      }
+    },
+
+    // ── LOGOUT ────────────────────────────────────────────────────────────────
+    async logout() {
+      try {
+        if (this.user?.id) {
+          await updateDoc(doc(db, 'users', this.user.id), { isOnline: false })
+        }
+      } catch (_) {}
+      await signOut(auth)
       this.user = null
       localStorage.removeItem('pmc_user')
     },
 
-    logoutOnClose() {
-      // Called on tab close/refresh — marks user offline and logs logout time
-      // Uses synchronous localStorage writes (no async, safe for beforeunload)
-      if (!this.user) return
-      const accounts = JSON.parse(localStorage.getItem('pmc_accounts') || '[]')
-      const account = accounts.find(a => a.id === this.user.id)
-      if (account) {
-        account.isOnline = false
-        localStorage.setItem('pmc_accounts', JSON.stringify(accounts))
-      }
-      const logs = JSON.parse(localStorage.getItem('pmc_online_logs') || '[]')
-      const log = [...logs].reverse().find(l => l.userId === this.user.id && !l.logoutTime)
-      if (log) {
-        log.logoutTime = new Date().toISOString()
-        localStorage.setItem('pmc_online_logs', JSON.stringify(logs))
-      }
-      localStorage.removeItem('pmc_user')
+    // ── HELPERS ───────────────────────────────────────────────────────────────
+    async getInspectors() {
+      const q    = query(collection(db, 'users'), where('role', '==', 'inspector'))
+      const snap = await getDocs(q)
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }))
     },
-
-    getInspectors() {
-      return this.accounts.filter(a => a.role === 'inspector')
-    },
-  }
+  },
 })

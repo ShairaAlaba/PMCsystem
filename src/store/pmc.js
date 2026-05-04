@@ -1,71 +1,92 @@
 import { defineStore } from 'pinia'
+import { db } from '../firebase'
+import {
+  collection, addDoc, getDocs,
+  updateDoc, deleteDoc, doc, onSnapshot
+} from 'firebase/firestore'
 
 export const usePmcStore = defineStore('pmc', {
   state: () => ({
-    records: JSON.parse(localStorage.getItem('pmc_records') || '[]'),
+    records: [],
+    _unsubscribe: null,   // holds the onSnapshot listener so we can clean it up
   }),
 
   actions: {
-    save() {
-      localStorage.setItem('pmc_records', JSON.stringify(this.records))
+
+    // ── LOAD (called loadRecords so AdminDashboard finds it) ──────────────────
+    // Uses onSnapshot so records update live without manual refresh.
+    async loadRecords() {
+      // Don't open a second listener if one is already running
+      if (this._unsubscribe) return
+
+      this._unsubscribe = onSnapshot(collection(db, 'records'), (snap) => {
+        this.records = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      })
     },
 
-    createRecord({ inspectorId, inspectorName, janitorName, buildingName, assignedPersonnel, month, year }) {
-      const id = Date.now().toString()
+    // Alias so any old code calling refresh() still works
+    async refresh() {
+      return this.loadRecords()
+    },
+
+    // ── CREATE RECORD ─────────────────────────────────────────────────────────
+    async createRecord({ inspectorId, inspectorName, janitorName, buildingName, assignedPersonnel, month, year }) {
       const days = []
       const daysInMonth = new Date(year, month, 0).getDate()
+      const tasks = () => ({
+        mopFloor: false, cleanLavatory: false, cleanWaterCloset: false,
+        cleanWallTiles: false, cleanUrinals: false, sprayAir: false,
+        disposeGarbage: false, cleanDustWindow: false, cleanMirror: false,
+        checkFloorDrain: false, checkFaucet: false,
+      })
       for (let d = 1; d <= daysInMonth; d++) {
-        days.push({
-          day: d,
-          am: { mopFloor: false, cleanLavatory: false, cleanWaterCloset: false, cleanWallTiles: false, cleanUrinals: false, sprayAir: false, disposeGarbage: false, cleanDustWindow: false, cleanMirror: false, checkFloorDrain: false, checkFaucet: false },
-          pm: { mopFloor: false, cleanLavatory: false, cleanWaterCloset: false, cleanWallTiles: false, cleanUrinals: false, sprayAir: false, disposeGarbage: false, cleanDustWindow: false, cleanMirror: false, checkFloorDrain: false, checkFaucet: false },
-          remarks: '',
-          inspectedBy: '',
-        })
+        days.push({ day: d, am: tasks(), pm: tasks(), remarks: '', inspectedBy: '' })
       }
       const record = {
-        id,
-        inspectorId,
-        inspectorName,
-        janitorName,
-        buildingName,
-        assignedPersonnel,
-        month, // 1-12
-        year,
-        days,
+        inspectorId, inspectorName, janitorName,
+        buildingName, assignedPersonnel, month, year, days,
         createdAt: new Date().toISOString(),
       }
-      this.records.push(record)
-      this.save()
-      return id
+      const docRef = await addDoc(collection(db, 'records'), record)
+      // onSnapshot will automatically add it to this.records — no manual push needed
+      return docRef.id
     },
 
-    updateDay(recordId, dayIndex, amPm, field, value) {
+    // ── UPDATE A DAY'S CHECKBOX ───────────────────────────────────────────────
+    async updateDay(recordId, dayIndex, amPm, field, value) {
       const recordIndex = this.records.findIndex(r => r.id === recordId)
       if (recordIndex === -1) return
-      // Force Vue reactivity by replacing the nested object references
-      const updatedDay = { ...this.records[recordIndex].days[dayIndex] }
-      updatedDay[amPm] = { ...updatedDay[amPm], [field]: value }
-      const updatedDays = [...this.records[recordIndex].days]
-      updatedDays[dayIndex] = updatedDay
+      const updatedDays = this.records[recordIndex].days.map((d, i) => {
+        if (i !== dayIndex) return d
+        return { ...d, [amPm]: { ...d[amPm], [field]: value } }
+      })
       this.records[recordIndex] = { ...this.records[recordIndex], days: updatedDays }
-      this.save()
+      await updateDoc(doc(db, 'records', recordId), { days: updatedDays })
     },
 
-    updateDayRemarks(recordId, dayIndex, remarks) {
+    // ── UPDATE REMARKS ────────────────────────────────────────────────────────
+    async updateDayRemarks(recordId, dayIndex, remarks) {
       const record = this.records.find(r => r.id === recordId)
       if (!record) return
       record.days[dayIndex].remarks = remarks
-      this.save()
+      await updateDoc(doc(db, 'records', recordId), { days: record.days })
     },
 
-    updateDayInspectedBy(recordId, dayIndex, inspectedBy) {
+    // ── UPDATE INSPECTED BY ───────────────────────────────────────────────────
+    async updateDayInspectedBy(recordId, dayIndex, inspectedBy) {
       const record = this.records.find(r => r.id === recordId)
       if (!record) return
       record.days[dayIndex].inspectedBy = inspectedBy
-      this.save()
+      await updateDoc(doc(db, 'records', recordId), { days: record.days })
     },
 
+    // ── DELETE RECORD ─────────────────────────────────────────────────────────
+    async deleteRecord(id) {
+      await deleteDoc(doc(db, 'records', id))
+      // onSnapshot will automatically remove it from this.records
+    },
+
+    // ── GETTERS (synchronous helpers) ─────────────────────────────────────────
     getRecord(id) {
       return this.records.find(r => r.id === id)
     },
@@ -77,14 +98,5 @@ export const usePmcStore = defineStore('pmc', {
     getAllRecords() {
       return this.records
     },
-
-    deleteRecord(id) {
-      this.records = this.records.filter(r => r.id !== id)
-      this.save()
-    },
-
-    refresh() {
-      this.records = JSON.parse(localStorage.getItem('pmc_records') || '[]')
-    },
-  }
+  },
 })

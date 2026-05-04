@@ -357,56 +357,116 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { usePmcStore } from '@/store/pmc'
+import { db } from '@/firebase'
+import {
+  collection, query, where, onSnapshot
+} from 'firebase/firestore'
 
 const router = useRouter()
-const auth = useAuthStore()
-const pmc = usePmcStore()
+const auth   = useAuthStore()
+const pmc    = usePmcStore()
 
-const activeTab = ref('analytics')
-const searchQ = ref('')
-const filterMonth = ref('')
-const filterYear = ref('')
+const activeTab     = ref('analytics')
+const searchQ       = ref('')
+const filterMonth   = ref('')
+const filterYear    = ref('')
 const mobileNavOpen = ref(false)
 
+// ── Data loaded from Firestore ─────────────────────────────────────────────
+const inspectorsList = ref([])
+const activityLogs   = ref([])
+
 function navTo(tab) {
-  activeTab.value = tab
+  activeTab.value     = tab
   mobileNavOpen.value = false
 }
 
-const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const now = new Date()
+// ── Load inspectors from Firestore in real-time ────────────────────────────
+function loadInspectors() {
+  const q = query(collection(db, 'users'), where('role', '==', 'inspector'))
+  onSnapshot(q, (snap) => {
+    inspectorsList.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  })
+}
 
-const today = computed(() => now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' }))
+// ── Load activity logs from Firestore (built from lastLogin field) ─────────
+function loadLogs() {
+  const q = query(collection(db, 'users'))
+  onSnapshot(q, (snap) => {
+    activityLogs.value = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(u => u.lastLogin)
+      .map(u => ({
+        userName:   u.name,
+        email:      u.email,
+        loginTime:  u.lastLogin,
+        logoutTime: u.logoutTime ?? null,
+      }))
+  })
+}
+
+// ── Load PMC records ───────────────────────────────────────────────────────
+async function loadRecords() {
+  if (typeof pmc.loadRecords === 'function') {
+    await pmc.loadRecords()
+  }
+}
+
+onMounted(() => {
+  loadInspectors()
+  loadLogs()
+  loadRecords()
+})
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const months      = ['January','February','March','April','May','June','July','August','September','October','November','December']
+const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const now         = new Date()
+
+// ── Computed helpers ───────────────────────────────────────────────────────
+const today = computed(() =>
+  now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+)
+
 const userInitials = computed(() => {
   const name = auth.currentUser?.name || ''
-  return name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 })
-const tabTitle = computed(() => ({ analytics:'Analytics', inspectors:'Inspectors', logs:'Activity Logs' }[activeTab.value]))
 
-const inspectors = computed(() => auth.accounts.filter(a => a.role === 'inspector'))
-const onlineInspectors = computed(() => inspectors.value.filter(i => i.isOnline))
-const allRecords = computed(() => pmc.records)
-const sortedLogs = computed(() => [...auth.onlineLogs].reverse())
+const tabTitle = computed(() =>
+  ({ analytics: 'Analytics', inspectors: 'Inspectors', logs: 'Activity Logs' }[activeTab.value])
+)
 
-// Available years from records
+// ── Inspectors from Firestore ──────────────────────────────────────────────
+const inspectors       = computed(() => inspectorsList.value)
+const onlineInspectors = computed(() => inspectorsList.value.filter(i => i.isOnline))
+
+// ── Logs from Firestore ────────────────────────────────────────────────────
+const sortedLogs = computed(() =>
+  [...activityLogs.value].sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime))
+)
+
+// ── Records from pmc store ─────────────────────────────────────────────────
+const allRecords = computed(() => pmc.records ?? [])
+
+// ── Available years ────────────────────────────────────────────────────────
 const availableYears = computed(() => {
-  const years = [...new Set(allRecords.value.map(r => r.year))].sort((a,b) => b - a)
+  const years = [...new Set(allRecords.value.map(r => r.year))].sort((a, b) => b - a)
   return years
 })
 
-// Analytics-scoped records (year filter only for KPI / chart context)
+// ── Analytics records (year filter only) ──────────────────────────────────
 const analyticsRecords = computed(() => {
   let r = allRecords.value
   if (filterYear.value) r = r.filter(x => x.year === Number(filterYear.value))
   return r
 })
 
-// Filtered records (search + month + year) for the records list
+// ── Filtered records (search + month + year) ───────────────────────────────
 const filteredRecords = computed(() => {
   let r = allRecords.value
   if (searchQ.value) {
@@ -418,14 +478,16 @@ const filteredRecords = computed(() => {
     )
   }
   if (filterMonth.value) r = r.filter(x => x.month === Number(filterMonth.value))
-  if (filterYear.value) r = r.filter(x => x.year === Number(filterYear.value))
+  if (filterYear.value)  r = r.filter(x => x.year  === Number(filterYear.value))
   return [...r].reverse()
 })
 
-// Unique buildings
-const uniqueBuildings = computed(() => new Set(analyticsRecords.value.map(r => r.buildingName).filter(Boolean)).size)
+// ── Unique buildings ───────────────────────────────────────────────────────
+const uniqueBuildings = computed(() =>
+  new Set(analyticsRecords.value.map(r => r.buildingName).filter(Boolean)).size
+)
 
-// Avg completion across analytics-scoped records
+// ── Average completion ─────────────────────────────────────────────────────
 const avgCompletion = computed(() => {
   const recs = analyticsRecords.value
   if (!recs.length) return 0
@@ -433,29 +495,35 @@ const avgCompletion = computed(() => {
   return Math.round(total / recs.length)
 })
 
-// Monthly chart — 12 months for selected year (or current year if no filter)
+// ── Monthly chart ──────────────────────────────────────────────────────────
 const monthlyChart = computed(() => {
   const yr = filterYear.value ? Number(filterYear.value) : now.getFullYear()
   return monthsShort.map((label, i) => {
     const month = i + 1
-    const recs = allRecords.value.filter(r => r.year === yr && r.month === month)
+    const recs  = allRecords.value.filter(r => r.year === yr && r.month === month)
     if (!recs.length) return { label, pct: 0 }
     const avg = Math.round(recs.reduce((s, r) => s + recordProgress(r), 0) / recs.length)
     return { label, pct: avg }
   })
 })
 
-// Inspector performance
-const inspectorPerf = computed(() => {
-  return inspectors.value.map(insp => {
-    const recs = filteredRecords.value.filter(r => r.inspectorId === insp.id)
-    const avg = recs.length ? Math.round(recs.reduce((s,r) => s + recordProgress(r), 0) / recs.length) : 0
-    return { id: insp.id, name: insp.name, count: recs.length, avg }
-  }).filter(i => i.count > 0).sort((a,b) => b.avg - a.avg)
-})
+// ── Inspector performance ──────────────────────────────────────────────────
+const inspectorPerf = computed(() =>
+  inspectors.value
+    .map(insp => {
+      const recs = filteredRecords.value.filter(r => r.inspectorId === insp.id)
+      const avg  = recs.length
+        ? Math.round(recs.reduce((s, r) => s + recordProgress(r), 0) / recs.length)
+        : 0
+      return { id: insp.id, name: insp.name, count: recs.length, avg }
+    })
+    .filter(i => i.count > 0)
+    .sort((a, b) => b.avg - a.avg)
+)
 
+// ── Helpers ────────────────────────────────────────────────────────────────
 function barColor(pct) {
-  if (pct >= 70) return 'var(--green-primary)'
+  if (pct >= 70) return 'var(--green-primary, #00c04b)'
   if (pct >= 40) return '#f59e0b'
   return '#ef4444'
 }
@@ -469,26 +537,35 @@ function recordProgress(rec) {
   if (!pastDays.length) return 0
   let filled = 0, total = 0
   pastDays.forEach(d => {
-    Object.values(d.am).forEach(v => { total++; if (v) filled++ })
-    Object.values(d.pm).forEach(v => { total++; if (v) filled++ })
+    Object.values(d.am ?? {}).forEach(v => { total++; if (v) filled++ })
+    Object.values(d.pm ?? {}).forEach(v => { total++; if (v) filled++ })
   })
   return total ? Math.round((filled / total) * 100) : 0
 }
 
 function recordsByInspector(id) {
-  return pmc.records.filter(r => r.inspectorId === id).length
+  return (pmc.records ?? []).filter(r => r.inspectorId === id).length
 }
 
 function formatTime(iso) {
-  return new Date(iso).toLocaleString('en-PH', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' })
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('en-PH', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
 }
+
 function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' })
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-PH', {
+    month: 'short', day: 'numeric', year: 'numeric'
+  })
 }
+
 function duration(start, end) {
   const ms = new Date(end) - new Date(start)
-  const m = Math.floor(ms / 60000)
-  const h = Math.floor(m / 60)
+  const m  = Math.floor(ms / 60000)
+  const h  = Math.floor(m / 60)
   return h > 0 ? `${h}h ${m % 60}m` : `${m}m`
 }
 
@@ -502,21 +579,16 @@ function deleteRec(id) {
   }
 }
 
-function doLogout() {
-  auth.logout()
+async function doLogout() {
+  await auth.logout()
   router.push('/')
 }
 
 function printRecord(id) {
-  // Navigate to record view then trigger print
-  const route = `/admin/record/${id}`
-  // Open in new tab so admin stays on dashboard
-  const url = window.location.href.split('#')[0] + '#' + route
+  const url = window.location.href.split('#')[0] + '#/admin/record/' + id
   const win = window.open(url, '_blank')
   if (win) {
-    win.addEventListener('load', () => {
-      setTimeout(() => win.print(), 800)
-    })
+    win.addEventListener('load', () => setTimeout(() => win.print(), 800))
   }
 }
 </script>
@@ -546,7 +618,6 @@ function printRecord(id) {
   box-shadow: 4px 0 24px rgba(0,0,0,0.18);
 }
 
-/* Decorative top accent stripe */
 .sidebar::before {
   content: '';
   display: block;
@@ -564,32 +635,18 @@ function printRecord(id) {
   border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 .sidebar-logo-img {
-  width: 94px;
-  height: 94px;
-  object-fit: contain;
-  object-position: center;
-  display: block;
-  flex-shrink: 0;
-  margin-bottom: 2px;
+  width: 94px; height: 94px;
+  object-fit: contain; object-position: center;
+  display: block; flex-shrink: 0; margin-bottom: 2px;
 }
-.sidebar-brand {
-  text-align: center;
-  flex: 1;
-  min-width: 0;
-}
+.sidebar-brand { text-align: center; flex: 1; min-width: 0; }
 .sb-title {
-  color: #ffffff;
-  font-weight: 800; font-size: 15px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  line-height: 1.1;
+  color: #ffffff; font-weight: 800; font-size: 15px;
+  letter-spacing: 1px; text-transform: uppercase; line-height: 1.1;
 }
 .sb-sub {
-  color: #f9dc07;
-  font-size: 11px; font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-top: 1px;
+  color: #f9dc07; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px;
 }
 
 .sidebar-user {
@@ -620,18 +677,12 @@ function printRecord(id) {
   background: transparent; color: rgba(255,255,255,0.5);
   font-size: 13px; font-weight: 500; cursor: pointer;
   transition: all 0.22s ease; margin-bottom: 3px;
-  text-align: left;
-  font-family: 'Poppins', sans-serif !important;
+  text-align: left; font-family: 'Poppins', sans-serif !important;
 }
-.nav-item:hover {
-  background: rgba(255,255,255,0.08);
-  color: #ffffff;
-  transform: translateX(3px);
-}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #ffffff; transform: translateX(3px); }
 .nav-item.active {
   background: linear-gradient(135deg, #f9dc07, #e8cc00);
-  color: #003300;
-  font-weight: 700;
+  color: #003300; font-weight: 700;
   box-shadow: 0 4px 12px rgba(249,220,7,0.3);
 }
 .nav-item.active svg { stroke: #003300; }
@@ -647,8 +698,7 @@ function printRecord(id) {
   width: 100%; display: flex; align-items: center; gap: 8px;
   padding: 10px 12px; border: none; border-radius: 8px;
   background: rgba(255,80,80,0.08); color: rgba(255,120,120,0.8);
-  font-size: 13px; font-weight: 500; cursor: pointer;
-  transition: all 0.2s;
+  font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
   font-family: 'Poppins', sans-serif !important;
 }
 .logout-btn:hover { background: rgba(255,80,80,0.18); color: #ff6b6b; }
@@ -657,27 +707,21 @@ function printRecord(id) {
 .main-content {
   flex: 1; overflow-y: auto; overflow-x: hidden;
   background: #f5f5f0;
-  scrollbar-width: thin;
-  scrollbar-color: #1a5c1a #e8f5e9;
+  scrollbar-width: thin; scrollbar-color: #1a5c1a #e8f5e9;
 }
 .main-content::-webkit-scrollbar { width: 8px; }
 .main-content::-webkit-scrollbar-track { background: #e8f5e9; }
 .main-content::-webkit-scrollbar-thumb { background: #1a5c1a; border-radius: 4px; }
 .main-content::-webkit-scrollbar-thumb:hover { background: #003300; }
 
-/* ── CONTENT HEADER STRIP ── */
+/* ── CONTENT HEADER ── */
 .content-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 28px 0;
-  margin-bottom: 20px;
+  padding: 20px 28px 0; margin-bottom: 20px;
 }
-.content-title {
-  font-size: 22px; font-weight: 700; color: #003300;
-  letter-spacing: -0.3px;
-}
+.content-title { font-size: 22px; font-weight: 700; color: #003300; letter-spacing: -0.3px; }
 .content-sub { font-size: 12px; color: #888; margin-top: 2px; }
 
-/* Tab content padding */
 .tab-content { padding: 0 28px 28px; animation: fadeUp 0.35s ease both; }
 
 @keyframes fadeUp {
@@ -687,61 +731,37 @@ function printRecord(id) {
 
 /* ── CARDS ── */
 .card {
-  background: #ffffff;
-  border-radius: 14px;
+  background: #ffffff; border-radius: 14px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  padding: 24px;
-  border: 1px solid rgba(0,0,0,0.05);
+  padding: 24px; border: 1px solid rgba(0,0,0,0.05);
 }
-.card-title {
-  font-size: 16px; font-weight: 700; color: #1a1a1a;
-  margin-bottom: 4px;
-}
+.card-title { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
 .card-sub { font-size: 13px; color: #888; margin-bottom: 22px; }
 
 /* ── PMC HERO BANNER ── */
 .pmc-hero {
-  width: 100%;
-  padding-top: 21.05%;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
+  width: 100%; padding-top: 21.05%; position: relative;
+  overflow: hidden; flex-shrink: 0;
   background: url('@/assets/pmc.png') center center / 100% 100% no-repeat;
 }
 .pmc-hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(105deg,
-    rgba(0,30,0,0.78) 0%,
-    rgba(0,51,0,0.5) 45%,
-    
-  );
+  background: linear-gradient(105deg, rgba(0,30,0,0.78) 0%, rgba(0,51,0,0.5) 45%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   text-align: center; padding: 0 32px;
 }
 .pmc-hero-title {
-  font-size: clamp(15px, 2vw, 26px);
-  font-weight: 800;
-  color: #ffffff;
-  letter-spacing: 3px;
-  text-shadow: 0 2px 16px rgb(0, 0, 0);
-  margin: 0; line-height: 1.2;
-  text-transform: uppercase;
+  font-size: clamp(15px, 2vw, 26px); font-weight: 800; color: #ffffff;
+  letter-spacing: 3px; text-shadow: 0 2px 16px rgb(0,0,0);
+  margin: 0; line-height: 1.2; text-transform: uppercase;
 }
 .pmc-hero-sub {
-  font-size: clamp(9px, 1vw, 13px);
-  color: #f9dc07;
-  margin-top: 6px;
-  letter-spacing: 1px;
-  font-weight: 500;
+  font-size: clamp(9px, 1vw, 13px); color: #f9dc07;
+  margin-top: 6px; letter-spacing: 1px; font-weight: 500;
 }
 
 /* ── FORMS ── */
-.form-label {
-  font-size: 11px; font-weight: 600; color: #555;
-  text-transform: uppercase; letter-spacing: 0.6px;
-  display: block; margin-bottom: 6px;
-}
 .form-control {
   border: 1.5px solid #e0e0e0; border-radius: 8px;
   font-size: 13px; padding: 10px 13px;
@@ -751,24 +771,16 @@ function printRecord(id) {
 }
 .form-control:focus {
   border-color: #009900; outline: none;
-  box-shadow: 0 0 0 3px rgba(0,153,0,0.1);
-  background: #fff;
+  box-shadow: 0 0 0 3px rgba(0,153,0,0.1); background: #fff;
 }
 
 /* ── BUTTONS ── */
-.btn {
-  font-family: 'Poppins', sans-serif !important;
-  font-weight: 600; border-radius: 8px; transition: all 0.2s;
-}
+.btn { font-family: 'Poppins', sans-serif !important; font-weight: 600; border-radius: 8px; transition: all 0.2s; }
 .btn-primary {
   background: linear-gradient(135deg, #009900, #006600);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(0,153,0,0.3);
+  color: #fff; box-shadow: 0 3px 10px rgba(0,153,0,0.3);
 }
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0,153,0,0.38);
-}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,153,0,0.38); }
 .btn-ghost { background: transparent; color: #555; }
 .btn-ghost:hover { background: #f0f0ea; color: #003300; }
 
@@ -776,52 +788,34 @@ function printRecord(id) {
 .badge-online { background: #e6f7e6; color: #009900; }
 .badge-offline { background: #ffeaea; color: #cc0000; }
 
-/* ── ALERTS ── */
-.alert-success { background: #e6f7e6; color: #006600; border-left: 4px solid #009900; }
-.alert-error { background: #ffeaea; color: #cc0000; border-left: 4px solid #ff4444; }
-
 /* ── EMPTY STATE ── */
 .empty-state { text-align: center; padding: 60px 20px; }
 .empty-icon { font-size: 44px; margin-bottom: 12px; }
 .empty-title { font-size: 17px; font-weight: 600; color: #666; }
-.empty-sub { font-size: 13px; color: #999; margin-top: 6px; }
 
 /* ── TABLE ── */
 th {
-  background: #003300 !important;
-  color: #ffffff !important;
+  background: #003300 !important; color: #ffffff !important;
   font-family: 'Poppins', sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.5px;
-  padding: 10px 14px !important;
+  font-size: 11px !important; font-weight: 600 !important;
+  letter-spacing: 0.5px; padding: 10px 14px !important;
 }
-td {
-  font-family: 'Poppins', sans-serif !important;
-  font-size: 13px !important;
-  color: #333;
-}
+td { font-family: 'Poppins', sans-serif !important; font-size: 13px !important; color: #333; }
 tr:nth-child(even) td { background: #f9f9f5 !important; }
 tr:hover td { background: #f0f5f0 !important; }
 
-/* Delete button */
 .delete-btn { color: #cc2200 !important; padding: 6px !important; }
 .delete-btn:hover { background: #fff0ee !important; }
 
-/* ============================================================
-   ADMIN-SPECIFIC STYLES
-   ============================================================ */
-
-/* KPI Cards */
+/* ── KPI CARDS ── */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 20px; }
 .kpi-card {
   background: #fff; border-radius: 14px; padding: 18px 20px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   display: flex; align-items: center; gap: 14px;
-  border-left: 4px solid var(--kpi-accent, #009900);
-  transition: all 0.25s ease;
   border: 1px solid rgba(0,0,0,0.05);
   border-left: 4px solid var(--kpi-accent, #009900);
+  transition: all 0.25s ease;
 }
 .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
 .kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -830,7 +824,7 @@ tr:hover td { background: #f0f5f0 !important; }
 .kpi-label { font-size: 11px; color: #888; margin-top: 4px; font-weight: 500; }
 .kpi-trend { font-size: 10px; color: #aaa; white-space: nowrap; font-weight: 500; }
 
-/* Filters */
+/* ── FILTERS ── */
 .analytics-filters { margin-bottom: 18px; padding: 16px 20px; }
 .af-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
 .af-group { display: flex; flex-direction: column; gap: 5px; }
@@ -839,7 +833,7 @@ tr:hover td { background: #f0f5f0 !important; }
 .af-clear { padding: 9px 14px; font-size: 12px; }
 .af-results-info { margin-top: 10px; font-size: 12px; color: #888; }
 
-/* Bar chart */
+/* ── BAR CHART ── */
 .chart-card { margin-bottom: 18px; }
 .chart-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
 .chart-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
@@ -859,7 +853,7 @@ tr:hover td { background: #f0f5f0 !important; }
 .chart-legend { display: flex; align-items: center; gap: 14px; margin-top: 10px; font-size: 10px; color: #888; }
 .cl-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 3px; }
 
-/* Bottom grid */
+/* ── ANALYTICS BOTTOM ── */
 .analytics-bottom { display: grid; grid-template-columns: 320px 1fr; gap: 18px; }
 .perf-card { height: fit-content; }
 .perf-list { display: flex; flex-direction: column; gap: 14px; }
@@ -878,7 +872,7 @@ tr:hover td { background: #f0f5f0 !important; }
 .perf-count { font-size: 10px; color: #aaa; white-space: nowrap; }
 .perf-empty { text-align: center; color: #aaa; font-size: 12px; padding: 20px 0; }
 
-/* Records list */
+/* ── RECORDS LIST ── */
 .records-card { overflow: hidden; }
 .rc-count {
   display: inline-block; background: linear-gradient(135deg,#f9dc07,#ff9900);
@@ -888,8 +882,7 @@ tr:hover td { background: #f0f5f0 !important; }
 .rec-list { display: flex; flex-direction: column; max-height: 500px; overflow-y: auto; }
 .rec-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 0; border-bottom: 1px solid #f0f0ea;
-  transition: background 0.15s;
+  padding: 12px 0; border-bottom: 1px solid #f0f0ea; transition: background 0.15s;
 }
 .rec-row:last-child { border-bottom: none; }
 .rec-row:hover { background: #fafaf5; }
@@ -912,7 +905,7 @@ tr:hover td { background: #f0f5f0 !important; }
 }
 .btn-print-rec:hover { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
 
-/* Inspectors tab */
+/* ── INSPECTORS ── */
 .insp-list { display: flex; flex-direction: column; gap: 10px; }
 .insp-card {
   border: 1.5px solid #eee; border-radius: 12px; padding: 16px;
@@ -929,30 +922,19 @@ tr:hover td { background: #f0f5f0 !important; }
 .ic-email { font-size: 12px; color: #888; }
 .ic-meta { display: flex; gap: 20px; font-size: 12px; color: #888; padding-top: 12px; border-top: 1px solid #f0f0ea; }
 
-/* Inspector status table in overview */
-.inspector-table { display: flex; flex-direction: column; }
-.it-header { background: #f5f5f0 !important; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; border-radius: 6px; }
-.it-row {
-  display: grid; grid-template-columns: 2fr 2fr 1fr 2fr;
-  align-items: center; gap: 16px; padding: 11px 16px;
-  border-bottom: 1px solid #f0f0ea; font-size: 13px;
-}
-.it-row:last-child { border-bottom: none; }
-.it-name { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #1a1a1a; }
-.insp-av {
-  width: 30px; height: 30px; background: linear-gradient(135deg,#f9dc07,#ff9900);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 800; color: #003300;
-}
-.it-email { color: #888; font-size: 12px; }
-.it-time { color: #aaa; font-size: 11px; }
-.it-empty { padding: 32px; text-align: center; color: #aaa; }
+/* ── TABLE WRAP ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* ══════════════════════════════════════
-   RESPONSIVE — Tablet & Mobile
+   MOBILE TOP BAR & HAMBURGER
    ══════════════════════════════════════ */
+.mobile-topbar { display: none; }
+.mobile-overlay { display: none; }
+.mobile-drawer { display: none; }
 
-/* ─── prevent any horizontal overflow globally ─── */
+/* ══════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════ */
 html, body { overflow-x: hidden; max-width: 100%; }
 .dashboard { overflow-x: hidden; }
 .main-content { overflow-x: hidden; min-width: 0; }
@@ -964,235 +946,96 @@ html, body { overflow-x: hidden; max-width: 100%; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── Mobile Top Bar & Hamburger ── */
-.mobile-topbar {
-  display: none;
-}
-.mobile-overlay {
-  display: none;
-}
-.mobile-drawer {
-  display: none;
-}
-
 @media (max-width: 768px) {
-  /* Hide desktop sidebar entirely */
   .sidebar { display: none !important; }
-
   .dashboard { flex-direction: column; height: 100svh; overflow: auto; }
 
-  /* Sticky top bar */
   .mobile-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    background: #003300;
-    padding: 0 16px;
-    height: 58px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    background: #003300; padding: 0 16px; height: 58px;
+    flex-shrink: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.25);
   }
   .mobile-topbar::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #f9dc07, #ff9900, #f9dc07);
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, #f9dc07, #ff9900, #f9dc07);
   }
-  .mobile-topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .mobile-logo {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-  }
-  .mobile-brand .mb-title {
-    font-size: 13px;
-    font-weight: 800;
-    color: #f9dc07;
-    letter-spacing: 0.5px;
-    line-height: 1.1;
-  }
-  .mobile-brand .mb-sub {
-    font-size: 10px;
-    color: rgba(255,255,255,0.55);
-    letter-spacing: 0.3px;
-  }
+  .mobile-topbar-left { display: flex; align-items: center; gap: 10px; }
+  .mobile-logo { width: 36px; height: 36px; object-fit: contain; }
+  .mobile-brand .mb-title { font-size: 13px; font-weight: 800; color: #f9dc07; letter-spacing: 0.5px; line-height: 1.1; }
+  .mobile-brand .mb-sub { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.3px; }
 
-  /* Hamburger button */
   .hamburger-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-    width: 42px;
-    height: 42px;
-    border-radius: 8px;
-    transition: background 0.2s;
-    padding: 0;
-    flex-shrink: 0;
+    background: transparent; border: none; cursor: pointer;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 5px; width: 42px; height: 42px; border-radius: 8px;
+    transition: background 0.2s; padding: 0; flex-shrink: 0;
   }
   .hamburger-btn:hover { background: rgba(255,255,255,0.08); }
   .ham-line {
-    display: block;
-    width: 22px;
-    height: 2.5px;
-    background: #f9dc07;
-    border-radius: 2px;
-    transition: all 0.3s ease;
-    transform-origin: center;
+    display: block; width: 22px; height: 2.5px;
+    background: #f9dc07; border-radius: 2px;
+    transition: all 0.3s ease; transform-origin: center;
   }
   .ham-line.open:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
   .ham-line.open:nth-child(2) { opacity: 0; transform: scaleX(0); }
   .ham-line.open:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
 
-  /* Dark overlay */
   .mobile-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 150;
-    animation: fadeIn 0.2s ease;
+    display: block; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 150;
   }
-
-  /* Slide-down drawer */
   .mobile-drawer {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 58px;
-    left: 0;
-    right: 0;
-    z-index: 160;
-    background: #003300;
-    transform: translateY(-110%);
+    display: flex; flex-direction: column;
+    position: fixed; top: 58px; left: 0; right: 0; z-index: 160;
+    background: #003300; transform: translateY(-110%);
     transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
     box-shadow: 0 8px 32px rgba(0,0,0,0.35);
     border-bottom: 3px solid #f9dc07;
-    max-height: calc(100svh - 58px);
-    overflow-y: auto;
+    max-height: calc(100svh - 58px); overflow-y: auto;
   }
-  .mobile-drawer.open {
-    transform: translateY(0);
-  }
-  .drawer-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  .drawer-nav {
-    display: flex;
-    flex-direction: column;
-    padding: 10px 12px;
-    gap: 4px;
-  }
+  .mobile-drawer.open { transform: translateY(0); }
+  .drawer-user { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .drawer-nav { display: flex; flex-direction: column; padding: 10px 12px; gap: 4px; }
   .drawer-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 13px 16px;
-    border: none;
-    background: transparent;
-    color: rgba(255,255,255,0.75);
-    border-radius: 10px;
-    font-family: 'Poppins', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-    width: 100%;
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px; border: none; background: transparent;
+    color: rgba(255,255,255,0.75); border-radius: 10px;
+    font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; text-align: left; width: 100%;
   }
   .drawer-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
-  .drawer-item.active {
-    background: linear-gradient(135deg, #f9dc07, #ff9900);
-    color: #003300;
-    font-weight: 700;
-  }
-  .drawer-badge {
-    margin-left: auto;
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 99px;
-  }
-  .drawer-item.active .drawer-badge {
-    background: rgba(0,51,0,0.2);
-    color: #003300;
-  }
-  .drawer-footer {
-    padding: 12px 20px 20px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-  }
+  .drawer-item.active { background: linear-gradient(135deg, #f9dc07, #ff9900); color: #003300; font-weight: 700; }
+  .drawer-badge { margin-left: auto; background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .drawer-item.active .drawer-badge { background: rgba(0,51,0,0.2); color: #003300; }
+  .drawer-footer { padding: 12px 20px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
 
-  /* ── Main content — locked width, natural scroll ── */
-  .main-content {
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  /* ── Hero banner ── */
+  .main-content { width: 100%; max-width: 100vw; overflow-x: hidden; overflow-y: auto; flex: 1; }
   .pmc-hero { padding-top: 38%; background-size: cover !important; }
   .pmc-hero-title { font-size: clamp(9px, 3.5vw, 15px); letter-spacing: 1px; }
   .pmc-hero-sub { font-size: clamp(7px, 2.2vw, 10px); margin-top: 3px; }
-
-  /* ── Content header ── */
   .content-header { padding: 14px 12px 0; margin-bottom: 10px; flex-wrap: wrap; gap: 4px; }
   .content-title { font-size: 17px; }
   .content-sub { font-size: 11px; }
-
-  /* ── Tab content ── */
   .tab-content { padding: 0 12px 24px; }
-
-  /* ── Cards ── */
   .card { padding: 14px; border-radius: 12px; overflow-wrap: break-word; word-break: break-word; }
-  .card-title { font-size: 14px; }
-  .card-sub { font-size: 12px; margin-bottom: 14px; }
-
-  /* ── KPI grid — 2 per row, compact ── */
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
   .kpi-card { padding: 12px 10px; gap: 8px; align-items: flex-start; flex-direction: column; }
-  .kpi-icon { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; }
-  .kpi-value { font-size: 22px; line-height: 1; }
-  .kpi-label { font-size: 10px; margin-top: 2px; }
+  .kpi-icon { width: 34px; height: 34px; border-radius: 8px; }
+  .kpi-value { font-size: 22px; }
+  .kpi-label { font-size: 10px; }
   .kpi-trend { display: none; }
-
-  /* ── Filters ── */
   .analytics-filters { padding: 12px; margin-bottom: 12px; }
   .af-row { flex-direction: column; gap: 10px; }
   .af-group { width: 100%; }
   .af-input { max-width: 100% !important; width: 100%; }
-
-  /* ── Bar chart ── */
   .chart-card { margin-bottom: 12px; }
   .bar-chart { height: 90px; gap: 2px; }
   .bar-label { font-size: 7px; }
   .chart-title { font-size: 13px; }
   .chart-sub { font-size: 10px; }
   .chart-legend { font-size: 9px; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-
-  /* ── Analytics bottom — stack ── */
   .analytics-bottom { grid-template-columns: 1fr; gap: 12px; }
-
-  /* ── Records list ── */
   .rec-list { max-height: none; }
   .rec-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; }
   .rr-right { width: 100%; justify-content: space-between; align-items: center; }
@@ -1201,25 +1044,13 @@ html, body { overflow-x: hidden; max-width: 100%; }
   .rr-month { font-size: 9px; }
   .rr-janitor { font-size: 12px; }
   .rr-detail { font-size: 10px; }
-
-  /* ── Inspector cards ── */
   .insp-card { padding: 12px; }
   .ic-meta { flex-direction: column; gap: 4px; font-size: 11px; }
   .ic-name { font-size: 13px; }
   .ic-email { font-size: 11px; }
-
-  /* ── Inspector table ── */
-  .it-row { grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; padding: 9px 10px; }
-  .it-row .it-email { display: none; }
-  .it-row .it-time { display: none; }
-
-  /* ── Activity log table — horizontal scroll inside the card only ── */
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .table-wrap table { min-width: 400px; }
   th { font-size: 9px !important; padding: 7px 10px !important; white-space: nowrap; }
   td { font-size: 11px !important; padding: 7px 10px !important; white-space: nowrap; }
-
-  /* ── Buttons ── */
   .btn { font-size: 12px; padding: 8px 14px; }
 }
 
