@@ -123,31 +123,15 @@
               <select v-if="!showAddBuilding" v-model="selectedBuilding" class="form-control" @change="onBuildingSelect">
                 <option value="" disabled>— Select a building —</option>
                 <option v-for="b in allBuildings" :key="b" :value="b">{{ b }}</option>
-                <option value="__add_new__">➕ Add New Building...</option>
               </select>
-              <div v-if="showAddBuilding" class="new-building-row">
-                <input v-model="newBuildingInput" type="text" class="form-control" placeholder="Type new building name..." @keyup.enter="confirmNewBuilding" />
-                <button type="button" class="btn btn-primary" style="padding:10px 14px;white-space:nowrap;" @click="confirmNewBuilding">Save</button>
-                <button type="button" class="btn btn-ghost" style="padding:10px 10px;" @click="cancelNewBuilding">✕</button>
-              </div>
               <div v-if="newRec.buildingName && !showAddBuilding" class="selected-building-tag">
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 {{ newRec.buildingName }}
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Janitor Name</label>
-              <input v-model="newRec.janitorName" type="text" class="form-control" placeholder="Enter janitor's full name" />
-            </div>
-            <div class="form-group">
               <label class="form-label">Assigned Utility Personnel</label>
-              <div class="autofill-field">
-                <input v-model="newRec.assignedPersonnel" type="text" class="form-control" readonly />
-                <span class="autofill-badge">
-                  <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                  Auto
-                </span>
-              </div>
+              <input v-model="newRec.assignedPersonnel" type="text" class="form-control" placeholder="Enter assigned utility personnel name" />
             </div>
             <div class="form-group">
               <label class="form-label">Month</label>
@@ -229,9 +213,6 @@
               </div>
               <div class="hc-actions">
                 <button class="btn btn-primary" style="padding:8px 18px;font-size:13px" @click="openRecord(rec.id)">Open</button>
-                <button class="btn btn-ghost" style="padding:8px;color:#dc2626" @click="deleteRec(rec.id)">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                </button>
               </div>
               <button class="btn btn-add-month" @click.stop="openAddMonth(rec)">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -311,6 +292,7 @@ const creating         = ref(false)   // loading state for Create button
 // Load records on mount so the inspector's list is always fresh
 onMounted(() => {
   if (typeof pmc.loadRecords === 'function') pmc.loadRecords()
+  if (typeof pmc.loadBuildings === 'function') pmc.loadBuildings()
 })
 
 function navTo(tab) {
@@ -330,71 +312,17 @@ const userInitials = computed(() => {
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 })
 
-// ── Building dropdown ─────────────────────────────────────────────────────────
-const DEFAULT_BUILDINGS = [
-  'AGRO-FORESTRY SHED','AGRO-WORKSHOP/TESDA','ALUMNI OFFICE','AMANTE BUILDING',
-  'ANNEX 2 (OLD LADIES DORM)','ANNEX 3','BARN HOUSE','BATOK HALL',
-  'BEEF CATTLE BUILDING','BOOKSTORE AND ORGMS OFFICE','CAA CANTEEN',
-  'CAA SWINE LABORATORY','CARAGA BLACK NATIVE CHICKEN','CCARD OFFICE',
-  'CED BUILDING','CED CANTEEN','CED RESTROOM','CED STUDENT CENTER',
-  'CFES CLASSROOM','CHURCH','CMNS LSG','COFES BUILDING',
-  'COFES CLASSROOM/HOSTEL','CSU STUDENT CENTER','DAIRY',
-  'DAIRY CARABAO FACILITY','DAIRY PROCESSING PLANT','ECO LODGE',
-  'ECO PARK BUILDING','FARM MECHANIZATION CENTER','FEEDMILL',
-  'FOOD INNOVATION CENT','FOOD TECH BUILDING',"GENTS' DORMITORY",
-  "GENTS' DORMITORY (UNDER CONS.)",'GOAT HOUSE','GUARD HOUSE',
-  'H.E.R.O. LEARNING COMMONS','HARDENING AREA','HINANG BUILDING',
-  'HIRAYA BUILDING','HOSTEL','ITSO-TTLO OFFICE','KALINAW HALL',
-  'KINAADMAN HALL',"LADIES' DORMITORY (UNDER CONS.)",'LIBRARY BUILDING',
-  'MASAWA BUILDING','MICORIZA OFFICE','MOLBAM','NEW ADMINISTRATIVE BLDG',
-  'OATC','OLD ADMINISTRATIVE BUILDING','OLD CAS BUILDING',
-  'OLD FARM MECHANIZATION CENTER','PHYSICAL FITNESS OFFICE',
-  'ROOTING RECOVERY','ROTC OFFICE','SCHOOL OF MEDICINE (UNDER CONS.)',
-  'SHEEP HOUSE','TISSUE CULTURE LAB','UNIVERSITY GYMNASIUM (UNDER CONS.)',
-  'VERMI HOUSE','WOOD WORKSHOP/TECH VOC BUILDING',
-]
-
-const customBuildings  = ref(JSON.parse(localStorage.getItem('pmc_custom_buildings') || '[]'))
-const allBuildings     = computed(() => [...DEFAULT_BUILDINGS, ...customBuildings.value].sort((a, b) => a.localeCompare(b)))
+// ── Building dropdown — from pmc store (localStorage) ────────────────────────
+const allBuildings     = computed(() => pmc.buildings.map(b => b.name))
 const selectedBuilding = ref('')
-const showAddBuilding  = ref(false)
-const newBuildingInput = ref('')
-
 function onBuildingSelect() {
-  if (selectedBuilding.value === '__add_new__') {
-    selectedBuilding.value = ''
-    showAddBuilding.value  = true
-    newBuildingInput.value = ''
-  } else {
-    newRec.value.buildingName = selectedBuilding.value
-  }
-}
-
-function confirmNewBuilding() {
-  const name = newBuildingInput.value.trim().toUpperCase()
-  if (!name) return
-  if (!DEFAULT_BUILDINGS.includes(name) && !customBuildings.value.includes(name)) {
-    customBuildings.value.push(name)
-    localStorage.setItem('pmc_custom_buildings', JSON.stringify(customBuildings.value))
-  }
-  newRec.value.buildingName = name
-  selectedBuilding.value    = name
-  showAddBuilding.value     = false
-  newBuildingInput.value    = ''
-}
-
-function cancelNewBuilding() {
-  showAddBuilding.value     = false
-  newBuildingInput.value    = ''
-  selectedBuilding.value    = ''
-  newRec.value.buildingName = ''
+  newRec.value.buildingName = selectedBuilding.value
 }
 
 // ── Form state ────────────────────────────────────────────────────────────────
 const newRec = ref({
-  janitorName:       '',
   buildingName:      '',
-  assignedPersonnel: auth.currentUser?.name || '',
+  assignedPersonnel: '',
   month:             now.getMonth() + 1,
   year:              now.getFullYear(),
 })
@@ -438,10 +366,6 @@ async function createRecord() {
     createMsg.value = { type: 'error', text: 'Please select a building name.' }
     return
   }
-  if (!newRec.value.janitorName.trim()) {
-    createMsg.value = { type: 'error', text: 'Please enter the janitor name.' }
-    return
-  }
 
   creating.value = true
   try {
@@ -449,7 +373,7 @@ async function createRecord() {
     const id = await pmc.createRecord({
       inspectorId:       auth.currentUser?.id,
       inspectorName:     auth.currentUser?.name,
-      janitorName:       newRec.value.janitorName,
+      janitorName:       newRec.value.assignedPersonnel,
       buildingName:      newRec.value.buildingName,
       assignedPersonnel: newRec.value.assignedPersonnel,
       month:             newRec.value.month,
@@ -460,9 +384,8 @@ async function createRecord() {
 
     // Reset form
     newRec.value = {
-      janitorName:       '',
       buildingName:      '',
-      assignedPersonnel: auth.currentUser?.name || '',
+      assignedPersonnel: '',
       month:             now.getMonth() + 1,
       year:              now.getFullYear(),
     }
@@ -483,9 +406,7 @@ function openRecord(id) {
   router.push(`/inspector/record/${id}`)
 }
 
-function deleteRec(id) {
-  if (confirm('Delete this record? This cannot be undone.')) pmc.deleteRecord(id)
-}
+
 
 function doLogout() {
   auth.logout()

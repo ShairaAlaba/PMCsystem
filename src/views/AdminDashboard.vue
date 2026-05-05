@@ -42,6 +42,11 @@
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Activity Logs
         </button>
+        <button class="drawer-item" :class="{active: activeTab === 'buildings'}" @click="navTo('buildings')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Buildings List
+          <span class="drawer-badge">{{ buildings.length }}</span>
+        </button>
       </nav>
       <div class="drawer-footer">
         <button class="logout-btn" @click="doLogout">
@@ -81,6 +86,11 @@
         <button class="nav-item" :class="{active: activeTab === 'logs'}" @click="activeTab = 'logs'">
           <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           Activity Logs
+        </button>
+        <button class="nav-item" :class="{active: activeTab === 'buildings'}" @click="activeTab = 'buildings'">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          Buildings List
+          <span class="nav-badge">{{ buildings.length }}</span>
         </button>
       </nav>
       <div class="sidebar-footer">
@@ -352,6 +362,70 @@
           </div>
         </div>
       </div>
+
+      <!-- ===== BUILDINGS TAB ===== -->
+      <div v-if="activeTab === 'buildings'" class="tab-content">
+        <div class="card" style="width:100%;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h3 class="card-title" style="margin-bottom:4px;">Buildings List</h3>
+              <p class="card-sub">Manage buildings available in the inspector's dropdown. Changes apply immediately.</p>
+            </div>
+            <span class="badge badge-green" style="font-size:13px;padding:6px 14px;">{{ buildings.length }} buildings</span>
+          </div>
+
+          <!-- Add building form -->
+          <div style="display:flex;gap:10px;margin-bottom:20px;">
+            <input
+              v-model="newBuildingName"
+              type="text"
+              class="form-control"
+              placeholder="Enter building name..."
+              @keyup.enter="addBuilding"
+              style="flex:1;"
+            />
+            <button class="btn btn-primary" @click="addBuilding" :disabled="buildingLoading" style="white-space:nowrap;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              Add Building
+            </button>
+          </div>
+
+          <!-- Search -->
+          <input
+            v-model="buildingSearch"
+            type="text"
+            class="form-control"
+            placeholder="Search buildings..."
+            style="margin-bottom:14px;"
+          />
+
+          <!-- Alert -->
+          <div v-if="buildingMsg" class="alert" :class="buildingMsg.type === 'success' ? 'alert-success' : 'alert-error'" style="margin-bottom:14px;">
+            {{ buildingMsg.text }}
+          </div>
+
+          <!-- List -->
+          <div v-if="buildingLoading && buildings.length === 0" style="text-align:center;padding:40px;color:var(--gray-500);">
+            Loading buildings...
+          </div>
+          <div v-else-if="filteredBuildings.length === 0" style="text-align:center;padding:40px;color:var(--gray-500);">
+            No buildings found.
+          </div>
+          <div v-else class="buildings-list">
+            <div
+              v-for="b in filteredBuildings"
+              :key="b.id"
+              class="building-row"
+            >
+              <div class="building-code">{{ b.code }}</div>
+              <div class="building-name">{{ b.name }}</div>
+              <button class="bl-delete-btn" @click="deleteBuilding(b.id, b.name)" title="Delete building">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -420,7 +494,52 @@ onMounted(() => {
   loadInspectors()
   loadLogs()
   loadRecords()
+  pmc.loadBuildings()
 })
+// ── Buildings List — stored in pmc store (localStorage) ───────────────────
+const newBuildingName = ref('')
+const buildingSearch  = ref('')
+const buildingMsg     = ref(null)
+let buildingMsgTimer  = null
+
+const buildings = computed(() => pmc.buildings)
+
+const filteredBuildings = computed(() => {
+  const q = buildingSearch.value.toLowerCase()
+  if (!q) return pmc.buildings
+  return pmc.buildings.filter(b =>
+    b.name.toLowerCase().includes(q) || b.code?.toLowerCase().includes(q)
+  )
+})
+
+function showBuildingMsg(type, text) {
+  buildingMsg.value = { type, text }
+  clearTimeout(buildingMsgTimer)
+  buildingMsgTimer = setTimeout(() => { buildingMsg.value = null }, 3000)
+}
+
+async function addBuilding() {
+  const name = newBuildingName.value.trim().toUpperCase()
+  if (!name) return
+  buildingLoading.value = true
+  const added = await pmc.addBuilding(name)
+  buildingLoading.value = false
+  if (!added) {
+    showBuildingMsg('error', 'Building already exists.')
+    return
+  }
+  newBuildingName.value = ''
+  showBuildingMsg('success', '"' + name + '" added successfully.')
+}
+
+async function deleteBuilding(id, name) {
+  if (!confirm('Delete "' + name + '" from the buildings list?\nThis will remove it from the inspector dropdown.')) return
+  buildingLoading.value = true
+  await pmc.deleteBuilding(name)
+  buildingLoading.value = false
+  showBuildingMsg('success', '"' + name + '" deleted.')
+}
+
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const months      = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -438,7 +557,7 @@ const userInitials = computed(() => {
 })
 
 const tabTitle = computed(() =>
-  ({ analytics: 'Analytics', inspectors: 'Inspectors', logs: 'Activity Logs' }[activeTab.value])
+  ({ analytics: 'Analytics', inspectors: 'Inspectors', logs: 'Activity Logs', buildings: 'Buildings List' }[activeTab.value])
 )
 
 // ── Inspectors from Firestore ──────────────────────────────────────────────
@@ -1063,4 +1182,55 @@ html, body { overflow-x: hidden; max-width: 100%; }
   .content-title { font-size: 15px; }
   .card { padding: 12px; }
 }
+
+/* ── Buildings List ─────────────────────────────────────────── */
+.buildings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+.building-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-200);
+  transition: background 0.15s;
+}
+.building-row:hover { background: var(--green-pale); border-color: var(--green-primary); }
+.building-code {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green-forest);
+  background: var(--green-pale);
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: center;
+}
+.building-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-800);
+}
+.bl-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.bl-delete-btn:hover { color: #dc2626; background: #fee2e2; }
+
 </style>

@@ -2,24 +2,121 @@ import { defineStore } from 'pinia'
 import { db } from '../firebase'
 import {
   collection, addDoc, getDocs,
-  updateDoc, deleteDoc, doc, onSnapshot
+  updateDoc, deleteDoc, doc, onSnapshot, query, orderBy
 } from 'firebase/firestore'
+
+// Default buildings to seed Firestore on first run
+const DEFAULT_BUILDINGS = [
+  { code: 'BL-001', name: '1ST GUARD HOUSE' },
+  { code: 'BL-002', name: 'DA DAIRY PROCESSING CENTER' },
+  { code: 'BL-003', name: 'CED STUDENT CENTER' },
+  { code: 'BL-004', name: 'CED BUILDING' },
+  { code: 'BL-005', name: 'CAA CANTEEN' },
+  { code: 'BL-006', name: 'MOLBAM' },
+  { code: 'BL-007', name: 'CAA BUILDING' },
+  { code: 'BL-008', name: 'GREEN HOUSE - CAA' },
+  { code: 'BL-009', name: 'FOOD TECH BUILDING - CAA' },
+  { code: 'BL-010', name: 'FOOD INNOVATION CENTER (FIC) - CAA' },
+  { code: 'BL-011', name: 'AGRI-WORKSHOP 2 - CAA' },
+  { code: 'BL-012', name: 'TISSUE CULTURE LAB - CAA' },
+  { code: 'BL-013', name: 'ITSO-TTLO BUILDING' },
+  { code: 'BL-014', name: 'ALUMNI BUILDING' },
+  { code: 'BL-015', name: 'CMNS LSG' },
+  { code: 'BL-016', name: 'HOSTEL BUILDING' },
+  { code: 'BL-017', name: 'EXECUTIVE HOUSE' },
+  { code: 'BL-018', name: 'BATOK HALL' },
+  { code: 'BL-019', name: 'STATE OF THE ART LIBRARY' },
+  { code: 'BL-020', name: 'UNIVERSITY GYMNASIUM' },
+  { code: 'BL-021', name: 'AMANTE BUILDING' },
+  { code: 'BL-022', name: 'AQUINO MULTI-PURPOSE BUILDING' },
+  { code: 'BL-023', name: 'ANNEX 3' },
+  { code: 'BL-024', name: 'PHYSICAL FITNESS BUILDING' },
+  { code: 'BL-025', name: "GENT'S DORMITORY" },
+  { code: 'BL-026', name: 'NEW ADMIN BUILDING' },
+  { code: 'BL-027', name: 'POWER HOUSE - NEW ADMIN' },
+  { code: 'BL-028', name: 'OLD ADMIN BUILDING' },
+  { code: 'BL-029', name: 'POWER HOUSE OLD' },
+  { code: 'BL-030', name: 'PUMP/POWER HOUSE' },
+  { code: 'BL-031', name: 'OLD CAS BUILDING' },
+  { code: 'BL-032', name: 'KINAADMAN HALL' },
+  { code: 'BL-033', name: 'CAFETERIA' },
+  { code: 'BL-034', name: 'CHAPEL' },
+  { code: 'BL-035', name: 'ECO PARK' },
+  { code: 'BL-036', name: 'ECO LODGE' },
+  { code: 'BL-037', name: 'HIRAYA BUILDING' },
+  { code: 'BL-038', name: 'GRANARY BUILDING' },
+  { code: 'BL-039', name: 'FEEDMILL' },
+  { code: 'BL-040', name: 'OLD FARM MECHANIZATION CENTER' },
+  { code: 'BL-041', name: 'ANNEX 2 (OLD LADIES DORM)' },
+  { code: 'BL-042', name: 'COFES ANNEX' },
+  { code: 'BL-043', name: 'PHI. CARABAO CENTER' },
+  { code: 'BL-044', name: 'PIGPEN HOUSE 1' },
+  { code: 'BL-045', name: 'PIGPEN HOUSE 2' },
+  { code: 'BL-046', name: 'ECO SHADE' },
+  { code: 'BL-047', name: 'CARAGA BLACK NATIVE CHICKEN' },
+  { code: 'BL-048', name: 'CARETAKER HOUSE' },
+  { code: 'BL-049', name: 'VERMICULTURE' },
+  { code: 'BL-050', name: 'ORGANIC VEGETABLES NURSERY PROS' },
+  { code: 'BL-051', name: 'OATC' },
+  { code: 'BL-052', name: 'VILLARES TECHNOVATION CENTER' },
+  { code: 'BL-053', name: 'MECHANICAL DRYER' },
+  { code: 'BL-054', name: 'FLATBED DRYER' },
+  { code: 'BL-055', name: 'CLONAL NURSERY' },
+  { code: 'BL-056', name: 'DEPOT & POTTING' },
+  { code: 'BL-057', name: 'ROOTING RECOVERY FACILITIES' },
+  { code: 'BL-058', name: 'HARDENING AREA' },
+  { code: 'BL-059', name: 'MYCORRHIZA OFFICE/LABORATORY' },
+  { code: 'BL-060', name: 'MICROHIZA SCREEN HOUSE' },
+  { code: 'BL-061', name: 'CATCHING CORAL' },
+  { code: 'BL-062', name: 'SOLAR DRYER' },
+  { code: 'BL-063', name: 'BEEF CATTLE FEEDLOT' },
+  { code: 'BL-064', name: 'BEEF CATTLE SHED' },
+  { code: 'BL-065', name: 'GOAT HOUSE' },
+  { code: 'BL-066', name: 'SHEEP HOUSE' },
+  { code: 'BL-067', name: 'BARN HOUSE' },
+  { code: 'BL-068', name: '2ND GUARD HOUSE' },
+  { code: 'BL-069', name: 'FARM MECHANIZATION CENTER' },
+  { code: 'BL-070', name: 'HINANG BUILDING' },
+  { code: 'BL-071', name: 'MASAWA HALL' },
+  { code: 'BL-072', name: 'UNIVERSITY GYMNASIUM' },
+  { code: 'BL-073', name: 'CMNS CANTEEN' },
+  { code: 'BL-074', name: 'CFES CLASSROOM' },
+  { code: 'BL-075', name: "GENTS' DORMITORY" },
+  { code: 'BL-076', name: "LADIES' DORMITORY" },
+  { code: 'BL-077', name: 'WOOD WORKSHOP BUILDING' },
+  { code: 'BL-078', name: 'BODEGA' },
+  { code: 'BL-079', name: 'MRF' },
+  { code: 'BL-080', name: 'CAA SWINE LABORATORY' },
+  { code: 'BL-081', name: 'POULTRY / STOCK ROOM' },
+  { code: 'BL-082', name: 'POWER HOUSE - KINAADMAN' },
+  { code: 'BL-083', name: 'POWER HOUSE - LIBRARY' },
+  { code: 'BL-084', name: '3RD GUARD HOUSE' },
+  { code: 'BL-085', name: '4TH GUARD HOUSE' },
+  { code: 'BL-086', name: 'MEDICINE STORAGE ROOM' },
+  { code: 'BL-087', name: 'BIO DIAGNOSTIC LABORATORY (NOT FUNCTIONAL)' },
+  { code: 'BL-088', name: 'DAIRY PROCESSING PLANT (NEW)' },
+  { code: 'BL-089', name: 'KALINAW HALL' },
+  { code: 'BL-090', name: 'CCARD OFFICE' },
+  { code: 'BL-091', name: 'HARRISON STATUE' },
+  { code: 'BL-092', name: 'OCHOA STATUE' },
+  { code: 'BL-093', name: 'CED RESTROOM' },
+  { code: 'BL-094', name: 'COVERED WALK' },
+]
 
 export const usePmcStore = defineStore('pmc', {
   state: () => ({
     records: [],
-    _unsubscribe: null,   // holds the onSnapshot listener so we can clean it up
+    buildings: [],
+    _unsubscribeRecords: null,   // listener for records
+    _unsubscribeBuildings: null, // listener for buildings
   }),
 
   actions: {
 
-    // ── LOAD (called loadRecords so AdminDashboard finds it) ──────────────────
-    // Uses onSnapshot so records update live without manual refresh.
+    // ── LOAD RECORDS (live sync) ───────────────────────────────────────────────
     async loadRecords() {
-      // Don't open a second listener if one is already running
-      if (this._unsubscribe) return
-
-      this._unsubscribe = onSnapshot(collection(db, 'records'), (snap) => {
+      if (this._unsubscribeRecords) return
+      this._unsubscribeRecords = onSnapshot(collection(db, 'records'), (snap) => {
         this.records = snap.docs.map(d => ({ id: d.id, ...d.data() }))
       })
     },
@@ -27,6 +124,57 @@ export const usePmcStore = defineStore('pmc', {
     // Alias so any old code calling refresh() still works
     async refresh() {
       return this.loadRecords()
+    },
+
+    // ── LOAD BUILDINGS (live sync from Firestore) ──────────────────────────────
+    // Call this once in App.vue or in both dashboards on mount.
+    // It seeds the default 94 buildings if Firestore is empty (first run only).
+    async loadBuildings() {
+      if (this._unsubscribeBuildings) return
+
+      // Check if Firestore already has buildings
+      const snap = await getDocs(collection(db, 'buildings'))
+
+      if (snap.empty) {
+        // First time — seed all default buildings into Firestore
+        const batch = DEFAULT_BUILDINGS.map(b =>
+          addDoc(collection(db, 'buildings'), { code: b.code, name: b.name })
+        )
+        await Promise.all(batch)
+      }
+
+      // Now listen for real-time changes
+      this._unsubscribeBuildings = onSnapshot(
+        query(collection(db, 'buildings'), orderBy('name')),
+        (snap) => {
+          this.buildings = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        }
+      )
+    },
+
+    // ── ADD BUILDING (saves to Firestore → syncs everywhere) ──────────────────
+    async addBuilding(name) {
+      const upper = name.trim().toUpperCase()
+      if (!upper) return false
+      if (this.buildings.some(b => b.name === upper)) return false
+
+      const lastCode = this.buildings.reduce((max, b) => {
+        const n = parseInt(b.code?.replace('BL-', '') || '0')
+        return n > max ? n : max
+      }, 0)
+      const code = 'BL-' + String(lastCode + 1).padStart(3, '0')
+
+      await addDoc(collection(db, 'buildings'), { code, name: upper })
+      // onSnapshot will automatically update this.buildings
+      return true
+    },
+
+    // ── DELETE BUILDING (removes from Firestore → syncs everywhere) ───────────
+    async deleteBuilding(name) {
+      const building = this.buildings.find(b => b.name === name)
+      if (!building?.id) return
+      await deleteDoc(doc(db, 'buildings', building.id))
+      // onSnapshot will automatically remove it from this.buildings
     },
 
     // ── CREATE RECORD ─────────────────────────────────────────────────────────
@@ -48,7 +196,6 @@ export const usePmcStore = defineStore('pmc', {
         createdAt: new Date().toISOString(),
       }
       const docRef = await addDoc(collection(db, 'records'), record)
-      // onSnapshot will automatically add it to this.records — no manual push needed
       return docRef.id
     },
 
@@ -83,7 +230,6 @@ export const usePmcStore = defineStore('pmc', {
     // ── DELETE RECORD ─────────────────────────────────────────────────────────
     async deleteRecord(id) {
       await deleteDoc(doc(db, 'records', id))
-      // onSnapshot will automatically remove it from this.records
     },
 
     // ── GETTERS (synchronous helpers) ─────────────────────────────────────────

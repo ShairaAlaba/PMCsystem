@@ -7,7 +7,7 @@
         Back
       </button>
       <div class="top-title">
-        <span>{{ record?.janitorName }}</span>
+        <span>{{ displayPersonnel }}</span>
         <span class="top-month">— {{ months[record?.month - 1] }} {{ record?.year }}</span>
       </div>
       <div class="top-actions">
@@ -58,7 +58,7 @@
       <div class="rec-info" style="margin-bottom: 8px;">
         <div class="ri-field">
           <span class="ri-label">Assigned Utility Personnel:</span>
-          <span class="ri-value">{{ record?.assignedPersonnel }}</span>
+          <span class="ri-value">{{ displayPersonnel }}</span>
         </div>
       </div>
 
@@ -162,6 +162,18 @@ const todayDate = now.getDate()
 const todayMonth = now.getMonth() + 1
 const todayYear = now.getFullYear()
 const record = computed(() => pmc.getRecord(route.params.id))
+
+// Show assignedPersonnel; but if it was incorrectly saved as the inspector's name
+// (old records), fall back to janitorName, then empty string.
+const displayPersonnel = computed(() => {
+  const r = record.value
+  if (!r) return ''
+  const assigned = r.assignedPersonnel || ''
+  const inspector = r.inspectorName || ''
+  // If assignedPersonnel is blank or is the same as the inspector, use janitorName
+  if (!assigned || assigned === inspector) return r.janitorName || ''
+  return assigned
+})
 
 const taskFields = ['mopFloor','cleanLavatory','cleanWaterCloset','cleanWallTiles','cleanUrinals','sprayAir','disposeGarbage','cleanDustWindow','cleanMirror','checkFloorDrain','checkFaucet']
 
@@ -349,6 +361,7 @@ function printRecord() { window.print() }
     border-collapse: collapse !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 
   /* Fixed column widths */
@@ -473,6 +486,7 @@ function printRecord() { window.print() }
 
   tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   thead { display: table-header-group !important; }
+  .pmc-table thead { position: static !important; }  /* fix sticky header breaking print layout */
 
   /* ── Footer right below the table ── */
   .print-footer {
@@ -645,6 +659,8 @@ tr.locked > td { background: #fafafa; }
 
 /* Print footer — hidden on screen */
 .print-footer { display: none; }
+
+
 
 /* ══════════════════════════════════════
    RESPONSIVE
