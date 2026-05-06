@@ -312,9 +312,10 @@ const userInitials = computed(() => {
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 })
 
-// ── Building dropdown — from pmc store (localStorage) ────────────────────────
+// ── Building dropdown — from pmc store ───────────────────────────────────────
 const allBuildings     = computed(() => pmc.buildings.map(b => b.name))
 const selectedBuilding = ref('')
+const showAddBuilding  = ref(false)   // was missing — caused crash when creating a record
 function onBuildingSelect() {
   newRec.value.buildingName = selectedBuilding.value
 }

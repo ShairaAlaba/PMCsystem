@@ -256,6 +256,8 @@ function isToday(day) {
 function canEdit(day) {
   if (!record.value) return false
   if (auth.isAdmin) return false
+  // Only the inspector who owns this record can edit it
+  if (record.value.inspectorId !== auth.currentUser?.id) return false
   if (record.value.year !== todayYear || record.value.month !== todayMonth) return false
   return day === todayDate
 }
