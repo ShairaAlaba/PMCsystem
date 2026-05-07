@@ -250,7 +250,7 @@ async function saveAll() {
 }
 
 function isToday(day) {
-  return day === todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
+  return day <= todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
 }
 
 function canEdit(day) {
@@ -259,7 +259,8 @@ function canEdit(day) {
   // Only the inspector who owns this record can edit it
   if (record.value.inspectorId !== auth.currentUser?.id) return false
   if (record.value.year !== todayYear || record.value.month !== todayMonth) return false
-  return day === todayDate
+  // Allow today and day 5 (missed entry recovery)
+  return day === todayDate || day === 5
 }
 
 function saveRemarks(dayIdx, val) { pmc.updateDayRemarks(route.params.id, dayIdx, val); hasEdits.value = true }
