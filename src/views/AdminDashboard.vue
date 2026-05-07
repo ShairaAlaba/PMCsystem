@@ -500,6 +500,7 @@ onMounted(() => {
 const newBuildingName = ref('')
 const buildingSearch  = ref('')
 const buildingMsg     = ref(null)
+const buildingLoading = ref(false)   // ← was missing — caused Add Building button to crash
 let buildingMsgTimer  = null
 
 const buildings = computed(() => pmc.buildings)
