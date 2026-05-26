@@ -165,6 +165,30 @@
           </div>
         </div>
 
+        <!-- Monthly completion bar chart -->
+        <div class="card chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Monthly Completion Rate</div>
+              <div class="chart-sub">Average task completion % per month {{ filterYear ? 'in ' + filterYear : '' }}</div>
+            </div>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-group" v-for="(item, i) in monthlyChart" :key="i">
+              <div class="bar-wrap">
+                <div class="bar-tooltip">{{ item.pct }}%</div>
+                <div class="bar-fill" :style="`height:${item.pct}%;background:${barColor(item.pct)}`"></div>
+              </div>
+              <div class="bar-label">{{ item.label }}</div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span class="cl-dot" style="background:#ef4444"></span><span>0–40%</span>
+            <span class="cl-dot" style="background:#f59e0b"></span><span>40–70%</span>
+            <span class="cl-dot" style="background:#00c04b"></span><span>70–100%</span>
+          </div>
+        </div>
+
         <!-- Filters row -->
         <div class="analytics-filters card">
           <div class="af-row">
@@ -205,30 +229,6 @@
           </div>
           <div class="af-results-info" v-if="filteredRecords.length !== allRecords.length">
             Showing <strong>{{ filteredRecords.length }}</strong> of <strong>{{ allRecords.length }}</strong> records
-          </div>
-        </div>
-
-        <!-- Monthly completion bar chart -->
-        <div class="card chart-card">
-          <div class="chart-header">
-            <div>
-              <div class="chart-title">Monthly Completion Rate</div>
-              <div class="chart-sub">Average task completion % per month {{ filterYear ? 'in ' + filterYear : '' }}</div>
-            </div>
-          </div>
-          <div class="bar-chart">
-            <div class="bar-group" v-for="(item, i) in monthlyChart" :key="i">
-              <div class="bar-wrap">
-                <div class="bar-tooltip">{{ item.pct }}%</div>
-                <div class="bar-fill" :style="`height:${item.pct}%;background:${barColor(item.pct)}`"></div>
-              </div>
-              <div class="bar-label">{{ item.label }}</div>
-            </div>
-          </div>
-          <div class="chart-legend">
-            <span class="cl-dot" style="background:#ef4444"></span><span>0–40%</span>
-            <span class="cl-dot" style="background:#f59e0b"></span><span>40–70%</span>
-            <span class="cl-dot" style="background:#00c04b"></span><span>70–100%</span>
           </div>
         </div>
 

@@ -87,7 +87,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(day, idx) in record?.days" :key="idx" :class="{today: isToday(day.day), locked: !canEdit(day.day)}">
+            <tr v-for="(day, idx) in record?.days" :key="idx" :class="{today: isToday(day.day), past: isPast(day.day), locked: !canEdit(day.day)}">
               <td class="td-date">{{ day.day }}</td>
               <template v-for="field in taskFields" :key="field + '-am'">
                 <td><div class="cell-wrap" :class="{editable: canEdit(day.day)}" @click.stop="openPicker($event, idx, 'am', field, day.day)"><span v-if="cellVal(day.am[field]) === 'check'" class="check-mark">✓</span><span v-else-if="cellVal(day.am[field]) === 'x'" class="x-mark">✗</span></div></td>
@@ -136,8 +136,9 @@
       <div class="legend-item"><div class="leg-check">✓</div> Completed / Done</div>
       <div class="legend-item"><div class="leg-x">✗</div> Not Done</div>
       <div class="legend-item"><div class="leg-empty"></div> No entry</div>
-      <div class="legend-item today-leg"><div class="leg-today"></div> Today (editable)</div>
-      <div class="legend-item"><div class="leg-locked"></div> Locked</div>
+      <div class="legend-item today-leg"><div class="leg-today"></div> Today</div>
+      <div class="legend-item"><div class="leg-past"></div> Previous days (editable)</div>
+      <div class="legend-item"><div class="leg-locked"></div> Locked (future)</div>
     </div>
   </div>
 </template>
@@ -250,7 +251,13 @@ async function saveAll() {
 }
 
 function isToday(day) {
-  return day <= todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
+  // Only the exact current date gets the "today" highlight
+  return day === todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
+}
+
+function isPast(day) {
+  // Days before today in the current month/year (editable but not highlighted)
+  return day < todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
 }
 
 function canEdit(day) {
@@ -259,8 +266,8 @@ function canEdit(day) {
   // Only the inspector who owns this record can edit it
   if (record.value.inspectorId !== auth.currentUser?.id) return false
   if (record.value.year !== todayYear || record.value.month !== todayMonth) return false
-  // Allow today and day 5 (missed entry recovery)
-  return day === todayDate || day === 5
+  // Allow all days up to and including today
+  return day <= todayDate
 }
 
 function saveRemarks(dayIdx, val) { pmc.updateDayRemarks(route.params.id, dayIdx, val); hasEdits.value = true }
@@ -441,11 +448,12 @@ function printRecord() { window.print() }
     box-sizing: border-box !important;
   }
 
-  .td-date {
+  .td-date,
+  tbody tr td.td-date {
     font-size: 7px !important;
     font-weight: 700 !important;
     color: #000 !important;
-    background: #efefef !important;
+    background: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -480,12 +488,10 @@ function printRecord() { window.print() }
     justify-content: center !important;
   }
 
-  tr.today > td { background: white !important; }
-  tr:nth-child(even) td {
-    background: #f5f5f5 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+  tr.today > td,
+  tr.today > td.td-date,
+  tr.past > td,
+  tr.past > td.td-date { background: white !important; color: #000 !important; }
 
   tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   thead { display: table-header-group !important; }
@@ -604,11 +610,14 @@ function printRecord() { window.print() }
   white-space: nowrap; text-overflow: ellipsis;
 }
 
-tr.today > td { background: #abd1b5 !important; }
+tr.today > td { background: #f9dc07 !important; color: #1a1a1a; }
+tr.today > td.td-date { background: #e6c800 !important; font-weight: 800; }
 
 @media print {
   tr.today > td { background: white !important; }
 }
+tr.past > td { background: #e8f5e9; }
+tr.past > td.td-date { background: #c8e6c9 !important; }
 tr.locked > td { background: #fafafa; }
 
 .cell-wrap {
@@ -641,7 +650,8 @@ tr.locked > td { background: #fafafa; }
 .legend-item { display: flex; align-items: center; gap: 8px; }
 .leg-check { width: 20px; height: 20px; background: #e8f5e9; border: 1px solid #bbb; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--green-forest); font-weight: 700; }
 .leg-empty { width: 20px; height: 20px; border: 1px solid #bbb; }
-.leg-today { width: 20px; height: 20px; background: #abd1b5; border: 1px solid #bbb; }
+.leg-today { width: 20px; height: 20px; background: #f9dc07; border: 1px solid #bbb; }
+.leg-past { width: 20px; height: 20px; background: #e8f5e9; border: 1px solid #a5d6a7; }
 .leg-locked { width: 20px; height: 20px; background: #fafafa; border: 1px solid #bbb; }
 
 .save-btn { animation: pulse 0.3s ease; }
