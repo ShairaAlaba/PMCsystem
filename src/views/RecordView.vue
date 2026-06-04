@@ -256,8 +256,16 @@ function isToday(day) {
 }
 
 function isPast(day) {
-  // Days before today in the current month/year (editable but not highlighted)
-  return day < todayDate && record.value?.month === todayMonth && record.value?.year === todayYear
+  const recYear = record.value?.year
+  const recMonth = record.value?.month
+  if (!recYear || !recMonth) return false
+
+  // Entire past month = all rows are "past"
+  if (recYear < todayYear) return true
+  if (recYear === todayYear && recMonth < todayMonth) return true
+
+  // Current month: days before today
+  return recMonth === todayMonth && recYear === todayYear && day < todayDate
 }
 
 function canEdit(day) {
@@ -265,9 +273,21 @@ function canEdit(day) {
   if (auth.isAdmin) return false
   // Only the inspector who owns this record can edit it
   if (record.value.inspectorId !== auth.currentUser?.id) return false
-  if (record.value.year !== todayYear || record.value.month !== todayMonth) return false
-  // Allow all days up to and including today
-  return day <= todayDate
+
+  const recYear = record.value.year
+  const recMonth = record.value.month
+
+  // Future months are locked
+  if (recYear > todayYear) return false
+  if (recYear === todayYear && recMonth > todayMonth) return false
+
+  // Current month: only days up to and including today
+  if (recYear === todayYear && recMonth === todayMonth) {
+    return day <= todayDate
+  }
+
+  // Past months: all days are editable
+  return true
 }
 
 function saveRemarks(dayIdx, val) { pmc.updateDayRemarks(route.params.id, dayIdx, val); hasEdits.value = true }
